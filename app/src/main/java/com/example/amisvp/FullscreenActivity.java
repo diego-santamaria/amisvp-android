@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.TextView;
 
 import com.example.amisvp.databinding.ActivityFullscreenBinding;
 
@@ -24,7 +25,7 @@ public class FullscreenActivity extends AppCompatActivity {
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
      */
-    private static final boolean AUTO_HIDE = true;
+    private static final boolean AUTO_HIDE = false;
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
@@ -65,11 +66,16 @@ public class FullscreenActivity extends AppCompatActivity {
         @Override
         public void run() {
             // Delayed display of UI elements
+            /*
             ActionBar actionBar = getSupportActionBar();
             if (actionBar != null) {
                 actionBar.show();
             }
+            */
             mControlsView.setVisibility(View.VISIBLE);
+            // Clear background text
+            TextView welcomeTextView = (TextView)findViewById(R.id.fullscreen_content);
+            welcomeTextView.setText("");
         }
     };
     private boolean mVisible;
@@ -159,6 +165,10 @@ public class FullscreenActivity extends AppCompatActivity {
         // Schedule a runnable to remove the status and navigation bar after a delay
         mHideHandler.removeCallbacks(mShowPart2Runnable);
         mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
+
+        // Set background text from string.xml
+        TextView welcomeTextView = (TextView)findViewById(R.id.fullscreen_content);
+        welcomeTextView.setText(R.string.welcome_content);
     }
 
     private void show() {
