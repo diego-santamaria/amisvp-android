@@ -5,13 +5,16 @@ import android.annotation.SuppressLint;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.amisvp.databinding.ActivityFullscreenBinding;
@@ -21,6 +24,9 @@ import com.example.amisvp.databinding.ActivityFullscreenBinding;
  * status bar and navigation/system bar) with user interaction.
  */
 public class FullscreenActivity extends AppCompatActivity {
+
+    public static final String EXTRA_TOKEN = "";
+    EditText tokenEditText;
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -134,6 +140,17 @@ public class FullscreenActivity extends AppCompatActivity {
         // while interacting with the UI.
 
         //binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
+
+        tokenEditText = findViewById(R.id.tokenEditText);
+        tokenEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int keyCode, KeyEvent keyEvent) {
+                if (keyEvent.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER){
+                    searchByToken_onClick(view);
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -168,7 +185,7 @@ public class FullscreenActivity extends AppCompatActivity {
         mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
 
         // Set background text from string.xml
-        TextView welcomeTextView = (TextView)findViewById(R.id.fullscreen_content);
+        TextView welcomeTextView = findViewById(R.id.fullscreen_content);
         welcomeTextView.setText(R.string.welcome_content);
     }
 
@@ -196,4 +213,16 @@ public class FullscreenActivity extends AppCompatActivity {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
+
+    /** Called when the user touches the only button available */
+    public void searchByToken_onClick(View view)
+    {
+        // Do something in response to button click
+        Intent intent = new Intent(this, CandidateActivity.class);
+        tokenEditText = findViewById(R.id.tokenEditText);
+        String tokenStr = tokenEditText.getText().toString();
+        intent.putExtra(EXTRA_TOKEN, tokenStr);
+        startActivity(intent);
+    }
+
 }

@@ -53,13 +53,14 @@
                 android:layout_marginBottom="50dp"/>
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tokenTextBox"
+                android:id="@+id/tokenTextInput"
                 android:layout_below="@+id/titleTextView"
                 android:layout_width="match_parent"
                 android:layout_marginBottom="10dp"
                 android:layout_height="wrap_content">
 
                 <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/tokenEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/token_textbox_hint"
@@ -72,8 +73,10 @@
                 android:id="@+id/main_button"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:layout_below="@+id/tokenTextBox"
+                android:layout_below="@+id/tokenTextInput"
+                android:backgroundTint="@color/secondaryColor"
                 android:gravity="center|center_horizontal"
+                android:onClick="searchByToken_onClick"
                 android:text="@string/main_button" />
 
         </RelativeLayout>
