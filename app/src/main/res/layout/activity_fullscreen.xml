@@ -4,8 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/fullscreenBackgroundColor"
-    android:orientation="horizontal"
+    android:orientation="vertical"
     android:theme="@style/ThemeOverlay.AMISVP.FullscreenContainer"
+    android:keepScreenOn="true"
     tools:context=".FullscreenActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
@@ -76,7 +77,6 @@
                 android:text="@string/main_button" />
 
         </RelativeLayout>
-
 
     </FrameLayout>
 

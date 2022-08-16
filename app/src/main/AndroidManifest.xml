@@ -17,8 +17,9 @@
             android:name=".FullscreenActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.AMISVP.Fullscreen">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AMISVP.Fullscreen"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

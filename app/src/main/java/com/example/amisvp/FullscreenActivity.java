@@ -74,7 +74,7 @@ public class FullscreenActivity extends AppCompatActivity {
             */
             mControlsView.setVisibility(View.VISIBLE);
             // Clear background text
-            TextView welcomeTextView = (TextView)findViewById(R.id.fullscreen_content);
+            TextView welcomeTextView = findViewById(R.id.fullscreen_content);
             welcomeTextView.setText("");
         }
     };
@@ -132,7 +132,8 @@ public class FullscreenActivity extends AppCompatActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
+
+        //binding.dummyButton.setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override
