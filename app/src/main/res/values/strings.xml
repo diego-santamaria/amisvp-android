@@ -3,4 +3,6 @@
     <string name="main_button">Buscar</string>
     <string name="welcome_content">APLICACIÓN MÓVIL\nPARA LA\nASISTENCIA AL VEEDOR</string>
     <string name="token_textbox_hint">Ingrese el token</string>
+    <string name="candidate_main_button">Comenzar</string>
+    <string name="btn_record_video">Iniciar evaluación</string>
 </resources>
