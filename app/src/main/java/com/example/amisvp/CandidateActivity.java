@@ -67,4 +67,9 @@ public class CandidateActivity extends AppCompatActivity {
     public void searchByToken_onClick(View view) {
         finish();
     }
+
+
+    public void confirm_onClick(View view) {
+        finish();
+    }
 }

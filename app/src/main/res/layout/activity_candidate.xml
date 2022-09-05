@@ -82,7 +82,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        android:onClick="confirm_onClick"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/license_textinput"
