@@ -6,6 +6,8 @@
         <entry key="app/src/main/res/layout-land/activity_candidate.xml" value="0.22996515679442509" />
         <entry key="app/src/main/res/layout/activity_candidate.xml" value="0.2214765100671141" />
         <entry key="app/src/main/res/layout/activity_fullscreen.xml" value="0.1722488038277512" />
+        <entry key="app/src/main/res/layout/activity_video_capture.xml" value="0.15625" />
+        <entry key="app/src/main/res/layout/activity_videocapture.xml" value="0.19746376811594202" />
       </map>
     </option>
   </component>

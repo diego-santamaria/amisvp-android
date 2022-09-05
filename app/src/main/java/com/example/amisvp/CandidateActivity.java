@@ -1,11 +1,15 @@
 package com.example.amisvp;
 
+import androidx.activity.result.contract.ActivityResultContract;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Looper;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -24,6 +28,7 @@ import java.util.concurrent.Executors;
 
 public class CandidateActivity extends AppCompatActivity {
 
+    private static int VIDEO_REQUEST = 101;
     IAPIClient apiClient;
 
     @Override
@@ -35,6 +40,8 @@ public class CandidateActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Exam examInfo = (Exam)intent.getSerializableExtra(FullscreenActivity.EXTRA_EXAM_INFO);
         setExamInfo(examInfo);
+
+
     }
 
     private void setExamInfo(Exam examInfo){
@@ -70,6 +77,8 @@ public class CandidateActivity extends AppCompatActivity {
 
 
     public void confirm_onClick(View view) {
-        finish();
+        Intent intent = new Intent(this, VideoCaptureActivity.class);
+        startActivity(intent);
     }
+
 }
