@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.amisvp">
-
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -14,11 +14,15 @@
         android:theme="@style/Theme.AMISVP"
         tools:targetApi="31">
         <activity
+            android:name=".CandidateActivity"
+            android:exported="false" />
+        <activity
             android:name=".FullscreenActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.AMISVP.Fullscreen">
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AMISVP.Fullscreen"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
