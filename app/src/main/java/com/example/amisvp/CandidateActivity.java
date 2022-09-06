@@ -1,30 +1,16 @@
 package com.example.amisvp;
 
-import androidx.activity.result.contract.ActivityResultContract;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Looper;
-import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.os.Handler;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.amisvp.helper.ImageHelper;
 import com.example.amisvp.pojo.Exam;
 import com.google.android.material.textfield.TextInputLayout;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CandidateActivity extends AppCompatActivity {
 
