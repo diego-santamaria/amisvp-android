@@ -292,7 +292,7 @@ public class FullscreenActivity extends AppCompatActivity {
     private Auth getAuth() {
         Auth auth = new Auth();
         auth.Username = "admin";
-        auth.Password = "123456";
+        auth.Password = "12345";
         return auth;
     }
 }

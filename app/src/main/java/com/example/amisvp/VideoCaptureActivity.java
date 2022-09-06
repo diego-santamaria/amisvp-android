@@ -118,7 +118,6 @@ public class VideoCaptureActivity extends AppCompatActivity {
                         Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
-
                 }
 
                 @Override
