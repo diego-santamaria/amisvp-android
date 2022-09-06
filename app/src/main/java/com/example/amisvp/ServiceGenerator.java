@@ -17,7 +17,7 @@ public class ServiceGenerator {
 
     public static String authToken;
 
-    private static final String BASE_URL = "https://webapitestcsj.azurewebsites.net";
+    private static final String BASE_URL = "https://apiwebsav.azurewebsites.net";
 
     private static Retrofit.Builder builder =
             new Retrofit.Builder()
