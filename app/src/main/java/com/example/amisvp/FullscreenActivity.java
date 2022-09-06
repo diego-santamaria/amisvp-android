@@ -245,6 +245,8 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
     private void getExamInfoByToken(String tokenStr){
+        Toast.makeText(FullscreenActivity.this,"Obteniendo información. Por favor, espere.", Toast.LENGTH_SHORT).show();
+
         Call<Exam> call = apiClient.getByToken(tokenStr);
         call.enqueue(new Callback<Exam>() {
             @Override
@@ -254,7 +256,7 @@ public class FullscreenActivity extends AppCompatActivity {
                     Exam examInfo = response.body();
                     showCandidateInfoIntent(examInfo);
                 } else {
-                    Toast.makeText(getApplicationContext(),"Invalid token.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Token inválido.",Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -275,9 +277,9 @@ public class FullscreenActivity extends AppCompatActivity {
             public void onResponse(Call<String> call, Response<String> response) {
                 if (response.isSuccessful()) {
                     ServiceGenerator.authToken = response.body();
-                    Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"En línea",Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getApplicationContext(),"Not connected",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Sin conexión",Toast.LENGTH_SHORT).show();
                 }
             }
 

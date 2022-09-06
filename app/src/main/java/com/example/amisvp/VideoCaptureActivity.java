@@ -33,7 +33,8 @@ public class VideoCaptureActivity extends AppCompatActivity {
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private VideoCapture videoCapture;
-    Button btnRecordVideo;
+    Button btnRecordVideo, btnCancelVideo;
+    private boolean saveVideoByDefault = true;
 
     PreviewView previewView;
 
@@ -45,6 +46,9 @@ public class VideoCaptureActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.previewView);
         btnRecordVideo = findViewById(R.id.btnRecordVideo);
+        btnCancelVideo = findViewById(R.id.btnCancelVideo);
+
+        btnCancelVideo.setEnabled(false);
 
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
@@ -96,6 +100,7 @@ public class VideoCaptureActivity extends AppCompatActivity {
             String timestamp = String.valueOf(date.getTime());
             String vidFilePath = movieDir.getAbsolutePath() + "/" + timestamp + ".mp4";
             File vidFile = new File(vidFilePath);
+            vidFile.deleteOnExit();
 
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 // TODO: Consider calling
@@ -110,12 +115,14 @@ public class VideoCaptureActivity extends AppCompatActivity {
             videoCapture.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
                 @Override
                 public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                    Toast.makeText(VideoCaptureActivity.this,"Guardando y enviando evaluación, por favor espere.", Toast.LENGTH_SHORT).show();
 
                     try {
-                        new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
+                        if (saveVideoByDefault == true) {
+                            Toast.makeText(VideoCaptureActivity.this,"Guardando evaluación. Por favor, espere.", Toast.LENGTH_SHORT).show();
+                            new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
+                        }
                     } catch (Exception e) {
-                        Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno.", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
                 }
@@ -125,18 +132,31 @@ public class VideoCaptureActivity extends AppCompatActivity {
                     Toast.makeText(VideoCaptureActivity.this, "Hubo un error al guardar el video: " + message, Toast.LENGTH_SHORT).show();
                 }
             });
-
         }
     }
 
     @SuppressLint("RestrictedApi")
     public void onClick(View view) {
+        saveVideoByDefault = true;
         if(btnRecordVideo.getText() == getResources().getString(R.string.btn_record_video)){
             btnRecordVideo.setText("Detener evaluación");
+            btnCancelVideo.setEnabled(true);
             recordVideo();
         } else {
-            btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
-            videoCapture.stopRecording();
+            setDefaultState();
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    public void cancelVideo_onClick(View view){
+        saveVideoByDefault = false;
+        setDefaultState();
+    }
+
+    @SuppressLint("RestrictedApi")
+    private void setDefaultState(){
+        btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
+        btnCancelVideo.setEnabled(false);
+        videoCapture.stopRecording();
     }
 }
