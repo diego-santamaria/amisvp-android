@@ -113,10 +113,6 @@ public class VideoCaptureActivity extends AppCompatActivity {
                     Toast.makeText(VideoCaptureActivity.this,"Guardando y enviando evaluación, por favor espere.", Toast.LENGTH_SHORT).show();
 
                     try {
-                        //UploadBlobUsingSASUrl.fileToUpload = vidFile.getPath();
-                        //UploadBlobUsingSASUrl.main(null);
-
-                        //new BlobHelper(vidFile.getPath());
                         new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
                     } catch (Exception e) {
                         Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno: " + e.getMessage(), Toast.LENGTH_SHORT).show();
