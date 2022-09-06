@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.amisvp.helper.BlobHelper;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -109,8 +110,19 @@ public class VideoCaptureActivity extends AppCompatActivity {
             videoCapture.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
                 @Override
                 public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                    Toast.makeText(VideoCaptureActivity.this,"Enviando evaluación, por favor espere.", Toast.LENGTH_SHORT).show();
-                    //outputFileResults.getSavedUri();
+                    Toast.makeText(VideoCaptureActivity.this,"Guardando y enviando evaluación, por favor espere.", Toast.LENGTH_SHORT).show();
+
+                    try {
+                        //UploadBlobUsingSASUrl.fileToUpload = vidFile.getPath();
+                        //UploadBlobUsingSASUrl.main(null);
+
+                        //new BlobHelper(vidFile.getPath());
+                        new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
+                    } catch (Exception e) {
+                        Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+
                 }
 
                 @Override

@@ -56,5 +56,7 @@ dependencies {
 
     implementation "androidx.activity:activity:1.5.1"
     implementation "androidx.fragment:fragment:1.5.2"
+
+    implementation 'com.microsoft.azure.android:azure-storage-android:2.0.0@aar'
 }
 
