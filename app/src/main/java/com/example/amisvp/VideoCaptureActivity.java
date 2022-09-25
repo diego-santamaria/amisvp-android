@@ -10,6 +10,9 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
@@ -17,10 +20,12 @@ import android.annotation.SuppressLint;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Size;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.example.amisvp.dialog.StopVideoDialogFragment;
 import com.example.amisvp.helper.BlobHelper;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -29,7 +34,7 @@ import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-public class VideoCaptureActivity extends AppCompatActivity {
+public class VideoCaptureActivity extends AppCompatActivity implements StopVideoDialogFragment.NoticeDialogListener{
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private VideoCapture videoCapture;
@@ -82,7 +87,8 @@ public class VideoCaptureActivity extends AppCompatActivity {
 
         //Video capture use case
         videoCapture = new VideoCapture.Builder()
-                .setVideoFrameRate(30)
+                .setVideoFrameRate(15)
+                .setTargetResolution(new Size(720,480))
                 .build();
 
         cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, videoCapture);
@@ -139,12 +145,30 @@ public class VideoCaptureActivity extends AppCompatActivity {
     public void onClick(View view) {
         saveVideoByDefault = true;
         if(btnRecordVideo.getText() == getResources().getString(R.string.btn_record_video)){
-            btnRecordVideo.setText("Detener evaluación");
+            btnRecordVideo.setText("Finalizar evaluación");
             btnCancelVideo.setEnabled(true);
             recordVideo();
         } else {
-            setDefaultState();
+            //prompt
+            FragmentManager sfm = ((AppCompatActivity) this).getSupportFragmentManager();
+            DialogFragment dialog = new StopVideoDialogFragment();
+            dialog.show(sfm,null);
         }
+    }
+
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        // User touched the dialog's positive button
+        setDefaultState();
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button
+
     }
 
     @SuppressLint("RestrictedApi")

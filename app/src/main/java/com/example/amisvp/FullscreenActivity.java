@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -131,6 +133,8 @@ public class FullscreenActivity extends AppCompatActivity {
         binding = ActivityFullscreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        findViewById(R.id.indeterminateBar).setVisibility(View.GONE);
+
         mVisible = true;
         mControlsView = binding.fullscreenContentControls;
         mContentView = binding.fullscreenContent;
@@ -235,7 +239,21 @@ public class FullscreenActivity extends AppCompatActivity {
         String tokenStr = tokenEditText.getText().toString();
 
         apiClient = ServiceGenerator.createService(IAPIClient.class, ServiceGenerator.authToken);
+
         getExamInfoByToken(tokenStr);
+    }
+
+    private void initiateLoading(boolean loading){
+        Dialog mOverlayDialog;
+        if (loading){
+            findViewById(R.id.indeterminateBar).setVisibility(View.VISIBLE);
+            findViewById(R.id.main_button).setClickable(false);
+            Toast.makeText(FullscreenActivity.this,"Obteniendo información. Por favor, espere.", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            findViewById(R.id.indeterminateBar).setVisibility(View.GONE);
+            findViewById(R.id.main_button).setClickable(true);
+        }
     }
 
     private void showCandidateInfoIntent(Exam examInfo){
@@ -245,8 +263,7 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
     private void getExamInfoByToken(String tokenStr){
-        Toast.makeText(FullscreenActivity.this,"Obteniendo información. Por favor, espere.", Toast.LENGTH_SHORT).show();
-
+        initiateLoading(true);
         Call<Exam> call = apiClient.getByToken(tokenStr);
         call.enqueue(new Callback<Exam>() {
             @Override
@@ -258,12 +275,14 @@ public class FullscreenActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(getApplicationContext(),"Token inválido.",Toast.LENGTH_SHORT).show();
                 }
+                initiateLoading(false);
             }
 
             @Override
             public void onFailure(Call<Exam> call, Throwable t) {
                 Log.d("Error",t.getMessage()+"");
                 call.cancel();
+                initiateLoading(false);
             }
         });
     }
