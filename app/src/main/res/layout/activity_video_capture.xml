@@ -31,7 +31,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <Button
-            android:id="@+id/btnRecordVideo"
+            android:id="@+id/record_video_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -47,7 +47,7 @@
             app:layout_constraintVertical_bias="0.90" />
 
         <Button
-            android:id="@+id/btnCancelVideo"
+            android:id="@+id/cancel_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cancelar evaluación"

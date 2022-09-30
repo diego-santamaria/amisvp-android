@@ -1,5 +1,7 @@
 package com.example.amisvp;
 
+import static com.example.amisvp.FullscreenActivity.EXTRA_EXAM_INFO;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -13,7 +15,7 @@ import com.example.amisvp.pojo.Exam;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class CandidateActivity extends AppCompatActivity {
-
+    private Exam examInfo;
     private static int VIDEO_REQUEST = 101;
     IAPIClient apiClient;
 
@@ -24,10 +26,8 @@ public class CandidateActivity extends AppCompatActivity {
 
         // Get the Intent that started this activity and extract the string
         Intent intent = getIntent();
-        Exam examInfo = (Exam)intent.getSerializableExtra(FullscreenActivity.EXTRA_EXAM_INFO);
+        examInfo = (Exam)intent.getSerializableExtra(EXTRA_EXAM_INFO);
         setExamInfo(examInfo);
-
-
     }
 
     private void setExamInfo(Exam examInfo){
@@ -64,6 +64,7 @@ public class CandidateActivity extends AppCompatActivity {
 
     public void confirm_onClick(View view) {
         Intent intent = new Intent(this, VideoCaptureActivity.class);
+        intent.putExtra(EXTRA_EXAM_INFO, examInfo);
         startActivity(intent);
     }
 

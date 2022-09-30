@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/fullscreenBackgroundColor"
+    android:theme="@style/ThemeOverlay.AMISVP.FullscreenContainer"
+    tools:context=".ResultActivity">
+
+
+    <ProgressBar
+        android:id="@+id/saveVideoProgBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:indeterminate="true"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="15dp" />
+
+
+    <TextView
+        android:id="@+id/status1TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/txt_status1"
+        android:textColor="@color/primaryTextColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.018"
+        app:layout_constraintStart_toEndOf="@+id/saveVideoProgBar"
+        tools:layout_editor_absoluteY="30dp" />
+
+    <ProgressBar
+        android:id="@+id/saveUriProgBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="28dp"
+        android:indeterminate="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/saveVideoProgBar" />
+
+    <TextView
+        android:id="@+id/status2TextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="56dp"
+        android:text="Actualizar información."
+        android:textColor="@color/primaryTextColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.019"
+        app:layout_constraintStart_toEndOf="@+id/saveUriProgBar"
+        app:layout_constraintTop_toBottomOf="@+id/status1TextView" />
+
+    <Button
+        android:id="@+id/retry_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="36dp"
+        android:layout_marginBottom="24dp"
+        android:text="Reintentar"
+        android:onClick="retry_onClick"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ok_button" />
+
+    <Button
+        android:id="@+id/ok_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="36dp"
+        android:layout_marginBottom="24dp"
+        android:text="Aceptar"
+        android:backgroundTint="@color/secondaryColor"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

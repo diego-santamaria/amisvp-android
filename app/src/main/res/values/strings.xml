@@ -8,4 +8,5 @@
     <string name="dialog_stop_recording">¿Está seguro que desea finalizar la evaluación?</string>
     <string name="ok">Aceptar</string>
     <string name="cancel">Cancelar</string>
+    <string name="txt_status1">Guardando video...</string>
 </resources>

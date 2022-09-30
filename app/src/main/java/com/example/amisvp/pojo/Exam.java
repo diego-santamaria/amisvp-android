@@ -47,5 +47,8 @@ public class Exam implements Serializable {
     @SerializedName("Persona")
     @Expose
     public Person persona;
+    @SerializedName("RutaVideo")
+    @Expose
+    public String RutaVideo;
 }
 

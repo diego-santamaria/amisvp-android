@@ -1,5 +1,7 @@
 package com.example.amisvp;
 
+import static com.example.amisvp.FullscreenActivity.EXTRA_EXAM_INFO;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,11 +14,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,8 +27,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.example.amisvp.dialog.StopVideoDialogFragment;
-import com.example.amisvp.helper.BlobHelper;
+import com.example.amisvp.dialog.StopVideoDialog;
+import com.example.amisvp.pojo.Exam;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
@@ -34,7 +36,8 @@ import java.util.Date;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
-public class VideoCaptureActivity extends AppCompatActivity implements StopVideoDialogFragment.NoticeDialogListener{
+public class VideoCaptureActivity extends AppCompatActivity implements StopVideoDialog.NoticeDialogListener{
+    private Exam examInfo;
 
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private VideoCapture videoCapture;
@@ -49,9 +52,12 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video_capture);
 
+        Intent intent = getIntent();
+        examInfo = (Exam)intent.getSerializableExtra(EXTRA_EXAM_INFO);
+
         previewView = findViewById(R.id.previewView);
-        btnRecordVideo = findViewById(R.id.btnRecordVideo);
-        btnCancelVideo = findViewById(R.id.btnCancelVideo);
+        btnRecordVideo = findViewById(R.id.record_video_button);
+        btnCancelVideo = findViewById(R.id.cancel_button);
 
         btnCancelVideo.setEnabled(false);
 
@@ -121,24 +127,34 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
             videoCapture.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
                 @Override
                 public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-
                     try {
                         if (saveVideoByDefault == true) {
                             Toast.makeText(VideoCaptureActivity.this,"Guardando evaluación. Por favor, espere.", Toast.LENGTH_SHORT).show();
-                            new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
+                            //new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
+                            showResultIntent(vidFile.getPath());
+
                         }
                     } catch (Exception e) {
                         Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno.", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
+                    videoCapture = null;
                 }
 
                 @Override
                 public void onError(int videoCaptureError, @NonNull String message, @Nullable Throwable cause) {
                     Toast.makeText(VideoCaptureActivity.this, "Hubo un error al guardar el video: " + message, Toast.LENGTH_SHORT).show();
+                    videoCapture = null;
                 }
             });
         }
+    }
+
+    private void showResultIntent(String vidFilePath){
+        Intent intent = new Intent(this, ResultActivity.class);
+        examInfo.RutaVideo = vidFilePath;
+        intent.putExtra(EXTRA_EXAM_INFO, examInfo);
+        startActivity(intent);
     }
 
     @SuppressLint("RestrictedApi")
@@ -150,8 +166,8 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
             recordVideo();
         } else {
             //prompt
-            FragmentManager sfm = ((AppCompatActivity) this).getSupportFragmentManager();
-            DialogFragment dialog = new StopVideoDialogFragment();
+            FragmentManager sfm = ((AppCompatActivity)this).getSupportFragmentManager();
+            DialogFragment dialog = new StopVideoDialog();
             dialog.show(sfm,null);
         }
     }
@@ -183,4 +199,7 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
         btnCancelVideo.setEnabled(false);
         videoCapture.stopRecording();
     }
+
+    @Override
+    public void onBackPressed () { }
 }

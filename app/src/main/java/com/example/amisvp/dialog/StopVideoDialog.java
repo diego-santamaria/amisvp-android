@@ -10,7 +10,7 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.amisvp.R;
 
-public class StopVideoDialogFragment extends DialogFragment {
+public class StopVideoDialog extends DialogFragment {
     /* The activity that creates an instance of this dialog fragment must
      * implement this interface in order to receive event callbacks.
      * Each method passes the DialogFragment in case the host needs to query it. */
@@ -43,13 +43,13 @@ public class StopVideoDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // Send the positive button event back to the host activity
-                        listener.onDialogPositiveClick(StopVideoDialogFragment.this);
+                        listener.onDialogPositiveClick(StopVideoDialog.this);
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // Send the negative button event back to the host activity
-                        listener.onDialogNegativeClick(StopVideoDialogFragment.this);
+                        listener.onDialogNegativeClick(StopVideoDialog.this);
                     }
                 })
         ;

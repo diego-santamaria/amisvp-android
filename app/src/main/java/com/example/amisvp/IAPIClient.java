@@ -17,6 +17,9 @@ public interface IAPIClient {
     @GET("/api/evaluacion/ObtenerPorToken?")
     Call<Exam> getByToken(@Query("strToken") String strToken);
 
+    @POST("/api/Evaluacion/ActualizarRutaVideo")
+    Call<String> SetVideoURI(@Body Exam exam);
+
     @POST("/api/login/authenticate")
     Call<String> loginService(@Body Auth auth);
 }

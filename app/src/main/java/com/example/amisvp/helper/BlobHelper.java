@@ -2,6 +2,8 @@ package com.example.amisvp.helper;
 
 import android.util.Xml;
 
+import com.example.amisvp.interfaces.IBlobEvents;
+import com.example.amisvp.task.UploadBlobTask;
 import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
@@ -29,7 +31,8 @@ public class BlobHelper {
                     "AccountName=thesisprojectstoacc;" +
                     "AccountKey=cHhwPJI1YFDwm4IW8VrYSlrS7/eBNAl0yjhCzJItjRbwOKaaTRE+3CGLbQ8trWUYVt2JmcmgtxVM+ASteqlIAw==;EndpointSuffix=core.windows.net";
 
-    private void UploadAsync(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
+    public static CloudBlockBlob UploadAsync(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
+
         // Setup the cloud storage account.
         CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
 
@@ -68,7 +71,7 @@ public class BlobHelper {
         // Upload video to the blob
         blob.uploadFromFile(filePath);
 
-        //blob.getUri();
+        return blob;
     }
 
     private void UploadStreamAsync(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
@@ -128,22 +131,4 @@ public class BlobHelper {
         blob.commitBlockList(blockList);
         //blob.getUri();
     }
-
-    public void uploadBlobToContainerTask(String filePath, String containerPathName){
-        new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Path p = Paths.get(filePath);
-                            String fileName = p.getFileName().toString();
-                            UploadAsync(filePath, fileName, containerPathName);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        ).start();
-    }
-
 }
