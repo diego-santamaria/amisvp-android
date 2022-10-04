@@ -1,10 +1,10 @@
 package com.example.amisvp.helper;
 
-import android.util.Xml;
+import android.util.Log;
 
-import com.example.amisvp.interfaces.IBlobEvents;
-import com.example.amisvp.task.UploadBlobTask;
+import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
@@ -17,8 +17,6 @@ import com.microsoft.azure.storage.blob.CloudBlockBlob;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,9 +66,13 @@ public class BlobHelper {
         BlobRequestOptions blobRequestOptions = new BlobRequestOptions();
         blobRequestOptions.setConcurrentRequestCount(8);
         blobRequestOptions.setSingleBlobPutThresholdInBytes(65000000); // 62 MB
-        // Upload video to the blob
-        blob.uploadFromFile(filePath);
 
+        AccessCondition accessCondition = new AccessCondition();
+        OperationContext operationContext = new OperationContext();
+
+        // Upload video to the blob
+        blob.uploadFromFile(filePath, accessCondition, blobRequestOptions, operationContext);
+        Log.d("getRequestResults: ",operationContext.getRequestResults()+"");
         return blob;
     }
 

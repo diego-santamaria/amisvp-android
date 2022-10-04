@@ -1,42 +1,31 @@
 package com.example.amisvp.task;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.example.amisvp.helper.BlobHelper;
 import com.example.amisvp.interfaces.IBlobEvents;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class UploadBlobTask {
+public class UploadBlobTask implements Callable<CloudBlockBlob> {
+    private String filePath;
+    private String containerPathName;
 
-    private IBlobEvents blobEventsInterface;
-    public UploadBlobTask(IBlobEvents blobEventsInterface){
-        this.blobEventsInterface = blobEventsInterface;
+    public UploadBlobTask(String filePath, String containerPathName){
+        this.filePath = filePath;
+        this.containerPathName = containerPathName;
     }
 
-
-    /*
-    public void registerBlobEventsListener(IBlobEvents blobEventsInterface){
-        this.blobEventsInterface = blobEventsInterface;
-    }
-    */
-
-    public void uploadAsync(String filePath, String containerPathName){
-        new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Path p = Paths.get(filePath);
-                            String fileName = p.getFileName().toString();
-                            CloudBlockBlob blob = BlobHelper.UploadAsync(filePath, fileName, containerPathName);
-                            blobEventsInterface.uploadSuccessfully(blob.getUri());
-                        } catch (Exception e) {
-                            blobEventsInterface.uploadFailed(e.getMessage());
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        ).start();
+    @Override
+    public CloudBlockBlob call() throws Exception {
+        Path p = Paths.get(filePath);
+        String fileName = p.getFileName().toString();
+        return BlobHelper.UploadAsync(filePath, fileName, containerPathName);
     }
 }

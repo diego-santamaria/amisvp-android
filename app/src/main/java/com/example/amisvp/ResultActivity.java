@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 import com.example.amisvp.interfaces.IBlobEvents;
 import com.example.amisvp.pojo.Exam;
-import com.example.amisvp.task.UploadBlobTask;
+import com.example.amisvp.task.BlobTask;
 
 import java.net.URI;
 
@@ -50,8 +50,11 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
 
     private void startUpload()
     {
-        UploadBlobTask blobTask = new UploadBlobTask(this);
+        BlobTask blobTask = new BlobTask(this);
         blobTask.uploadAsync(examInfo.RutaVideo, "recordings");
+
+        //UploadBlobAsyncTask blobThread = new UploadBlobAsyncTask(examInfo.RutaVideo, "recordings");
+
     }
 
     @Override
