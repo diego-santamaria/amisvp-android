@@ -50,7 +50,7 @@ public class CandidateActivity extends AppCompatActivity {
                 TextView.BufferType.EDITABLE);
 
         ImageView imageView = findViewById(R.id.candidate_imageView);
-        new ImageHelper.DownloadImageFromInternet(imageView).execute(examInfo.rutaFoto);
+        new ImageHelper.SetImageFromInternet(imageView).execute(examInfo.rutaFoto);
 
     }
 

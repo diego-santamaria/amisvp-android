@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +28,7 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
     private Exam examInfo;
     Button btnRetry, btnAcept;
     TextView txtStep1, txtStep2;
+    ImageView imageView1, imageView2;
 
     IAPIClient apiClient;
 
@@ -41,6 +43,10 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
         txtStep1 = findViewById(R.id.status1TextView);
         txtStep1.setTypeface(txtStep1.getTypeface(), Typeface.BOLD);
         txtStep2 = findViewById(R.id.status2TextView);
+        imageView1 = findViewById(R.id.save_imageView);
+        imageView1.setVisibility(View.INVISIBLE);
+        imageView2 = findViewById(R.id.update_imageView);
+        imageView2.setVisibility(View.INVISIBLE);
 
         Intent intent = getIntent();
         examInfo = (Exam)intent.getSerializableExtra(EXTRA_EXAM_INFO);
@@ -83,6 +89,11 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
         txtStep1.setText(R.string.txt_status1);
         btnRetry.setEnabled(false);
         startUpload();
+    }
+
+    public void acept_onClick(View view)
+    {
+        this.finish();
     }
 
     private void updateUri(){

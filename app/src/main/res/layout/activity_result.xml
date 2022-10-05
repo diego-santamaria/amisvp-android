@@ -23,12 +23,13 @@
         android:id="@+id/status1TextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
         android:text="@string/txt_status1"
         android:textColor="@color/primaryTextColor"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.018"
+        app:layout_constraintHorizontal_bias="0.019"
         app:layout_constraintStart_toEndOf="@+id/saveVideoProgBar"
-        tools:layout_editor_absoluteY="30dp" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ProgressBar
         android:id="@+id/saveUriProgBar"
@@ -71,7 +72,24 @@
         android:layout_marginBottom="24dp"
         android:text="Aceptar"
         android:backgroundTint="@color/secondaryColor"
+        android:onClick="acept_onClick"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <ImageView
+        android:id="@+id/save_imageView"
+        android:layout_width="48dp"
+        android:layout_height="47dp"
+        tools:layout_editor_absoluteX="36dp"
+        tools:layout_editor_absoluteY="16dp"
+        tools:srcCompat="@tools:sample/avatars" />
+
+    <ImageView
+        android:id="@+id/update_imageView"
+        android:layout_width="48dp"
+        android:layout_height="47dp"
+        tools:layout_editor_absoluteX="36dp"
+        tools:layout_editor_absoluteY="92dp"
+        tools:srcCompat="@tools:sample/avatars" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
