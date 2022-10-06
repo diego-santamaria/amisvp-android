@@ -66,6 +66,7 @@ public class CandidateActivity extends AppCompatActivity {
         Intent intent = new Intent(this, VideoCaptureActivity.class);
         intent.putExtra(EXTRA_EXAM_INFO, examInfo);
         startActivity(intent);
+        finish();
     }
 
 }

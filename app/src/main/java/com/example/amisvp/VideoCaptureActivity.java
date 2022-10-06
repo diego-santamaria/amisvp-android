@@ -61,6 +61,10 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
         btnCancelVideo.setEnabled(false);
 
+        setUpCamera();
+    }
+
+    private void setUpCamera(){
         cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
@@ -130,21 +134,19 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
                     try {
                         if (saveVideoByDefault == true) {
                             Toast.makeText(VideoCaptureActivity.this,"Guardando evaluación. Por favor, espere.", Toast.LENGTH_SHORT).show();
-                            //new BlobHelper().uploadBlobToContainerTask(vidFile.getPath(), "recordings");
                             showResultIntent(vidFile.getPath());
-
                         }
                     } catch (Exception e) {
                         Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno.", Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
-                    videoCapture = null;
+                    //videoCapture = null;
                 }
 
                 @Override
                 public void onError(int videoCaptureError, @NonNull String message, @Nullable Throwable cause) {
                     Toast.makeText(VideoCaptureActivity.this, "Hubo un error al guardar el video: " + message, Toast.LENGTH_SHORT).show();
-                    videoCapture = null;
+                    //videoCapture = null;
                 }
             });
         }
@@ -155,6 +157,7 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
         examInfo.RutaVideo = vidFilePath;
         intent.putExtra(EXTRA_EXAM_INFO, examInfo);
         startActivity(intent);
+        finish();
     }
 
     @SuppressLint("RestrictedApi")
@@ -189,6 +192,7 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
     @SuppressLint("RestrictedApi")
     public void cancelVideo_onClick(View view){
+        //Toast.makeText(this,"Cancelado.", Toast.LENGTH_SHORT).show;
         saveVideoByDefault = false;
         setDefaultState();
     }

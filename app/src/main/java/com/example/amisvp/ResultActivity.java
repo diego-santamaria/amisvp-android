@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,7 +29,8 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
     private Exam examInfo;
     Button btnRetry, btnAcept;
     TextView txtStep1, txtStep2;
-    ImageView imageView1, imageView2;
+    ImageView imageViewSaveDone, imageViewUpdDone, imageViewSaveError, imageViewUpdError;
+    ProgressBar progressBarVideo, progressBarUri;
 
     IAPIClient apiClient;
 
@@ -38,15 +40,17 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
         setContentView(R.layout.activity_result);
 
         btnRetry = findViewById(R.id.retry_button);
-        btnRetry.setEnabled(false);
         btnAcept = findViewById(R.id.ok_button);
         txtStep1 = findViewById(R.id.status1TextView);
-        txtStep1.setTypeface(txtStep1.getTypeface(), Typeface.BOLD);
         txtStep2 = findViewById(R.id.status2TextView);
-        imageView1 = findViewById(R.id.save_imageView);
-        imageView1.setVisibility(View.INVISIBLE);
-        imageView2 = findViewById(R.id.update_imageView);
-        imageView2.setVisibility(View.INVISIBLE);
+        imageViewSaveDone = findViewById(R.id.save_done_imageView);
+        imageViewUpdDone = findViewById(R.id.update_done_imageView);
+        imageViewSaveError = findViewById(R.id.save_error_imageView);
+        imageViewUpdError = findViewById(R.id.update_error_imageView);
+        progressBarVideo = findViewById(R.id.saveVideoProgBar);
+        progressBarUri = findViewById(R.id.saveUriProgBar);
+
+        setResultStatusView("loading", 0);
 
         Intent intent = getIntent();
         examInfo = (Exam)intent.getSerializableExtra(EXTRA_EXAM_INFO);
@@ -58,9 +62,6 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
     {
         BlobTask blobTask = new BlobTask(this);
         blobTask.uploadAsync(examInfo.RutaVideo, "recordings");
-
-        //UploadBlobAsyncTask blobThread = new UploadBlobAsyncTask(examInfo.RutaVideo, "recordings");
-
     }
 
     @Override
@@ -68,10 +69,7 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
 
     @Override
     public void uploadSuccessfully(URI blobUri) {
-        txtStep1.setTypeface(txtStep1.getTypeface(), Typeface.NORMAL);
-        txtStep2.setTypeface(txtStep2.getTypeface(), Typeface.BOLD);
-        txtStep1.setText("Video guardado.");
-        txtStep2.setText("Actualizando información...");
+        setResultStatusView("success", 1);
         examInfo.RutaVideo = blobUri.toString();
         apiClient = ServiceGenerator.createService(IAPIClient.class, ServiceGenerator.authToken);
         updateUri();
@@ -80,20 +78,77 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
     @Override
     public void uploadFailed(String errorMessage) {
         // retry
-        btnRetry.setEnabled(true);
-        txtStep1.setText("Video no guardado. Por favor, reintente.");
+        setResultStatusView("failed", 1);
     }
 
     public void retry_onClick(View view)
     {
-        txtStep1.setText(R.string.txt_status1);
-        btnRetry.setEnabled(false);
+        setResultStatusView("retry", 0);
         startUpload();
+    }
+
+    private void setResultStatusView(String status, int step){
+        switch (status) {
+            case "loading":
+            case "retry":
+                txtStep1.setText(R.string.txt_status1);
+                btnRetry.setEnabled(false);
+                txtStep1.setTypeface(txtStep1.getTypeface(), Typeface.BOLD);
+
+                progressBarVideo.setVisibility(View.VISIBLE);
+                imageViewSaveDone.setVisibility(View.INVISIBLE);
+                imageViewSaveError.setVisibility(View.INVISIBLE);
+
+                progressBarUri.setVisibility(View.VISIBLE);
+                imageViewUpdDone.setVisibility(View.INVISIBLE);
+                imageViewUpdError.setVisibility(View.INVISIBLE);
+                break;
+            case "success":
+                if (step == 1)
+                {
+                    txtStep1.setTypeface(txtStep1.getTypeface(), Typeface.NORMAL);
+                    txtStep2.setTypeface(txtStep2.getTypeface(), Typeface.BOLD);
+                    txtStep1.setText("Video guardado.");
+                    txtStep2.setText("Actualizando información...");
+
+                    progressBarVideo.setVisibility(View.INVISIBLE);
+                    imageViewSaveDone.setVisibility(View.VISIBLE);
+                    imageViewSaveError.setVisibility(View.INVISIBLE);
+                }
+                else if (step == 2) {
+                    txtStep2.setText("Información actualizada.");
+                    progressBarUri.setVisibility(View.GONE);
+                    imageViewUpdDone.setVisibility(View.VISIBLE);
+
+                    progressBarUri.setVisibility(View.INVISIBLE);
+                    imageViewUpdDone.setVisibility(View.VISIBLE);
+                    imageViewUpdError.setVisibility(View.INVISIBLE);
+                }
+
+
+                break;
+            case "failed":
+                btnRetry.setEnabled(true);
+                if (step == 1)
+                    txtStep1.setText("Video no guardado. Por favor, reintente.");
+                if (step == 2)
+                    txtStep2.setText("Actualización fallida. Por favor, reintente.");
+
+                progressBarVideo.setVisibility(View.INVISIBLE);
+                imageViewSaveDone.setVisibility(View.INVISIBLE);
+                imageViewSaveError.setVisibility(View.VISIBLE);
+
+                progressBarUri.setVisibility(View.INVISIBLE);
+                imageViewUpdDone.setVisibility(View.INVISIBLE);
+                imageViewUpdError.setVisibility(View.VISIBLE);
+                break;
+        }
     }
 
     public void acept_onClick(View view)
     {
-        this.finish();
+        startActivity(new Intent(this, FullscreenActivity.class));
+        finish();
     }
 
     private void updateUri(){
@@ -105,10 +160,10 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
                 if (response.isSuccessful()){
                     Log.d("OK",response.code()+" > "+response.body());
                     //String result = response.body();
-                    //showCandidateInfoIntent(examInfo);
-                    txtStep2.setText("Información actualizada.");
+                    setResultStatusView("success", 2);
                 } else {
-                    Toast.makeText(getApplicationContext(),"Llamada inválida.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Actualización fallida. Por favor, reintente.",Toast.LENGTH_SHORT).show();
+                    setResultStatusView("failed", 2);
                 }
             }
 

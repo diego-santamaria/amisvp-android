@@ -8,6 +8,7 @@
     android:theme="@style/ThemeOverlay.AMISVP.FullscreenContainer"
     android:background="?attr/fullscreenBackgroundColor"
     android:keepScreenOn="true"
+    android:noHistory="true"
     tools:context=".VideoCaptureActivity">
 
     <androidx.camera.view.PreviewView
