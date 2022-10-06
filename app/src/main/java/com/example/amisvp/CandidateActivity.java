@@ -16,7 +16,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 public class CandidateActivity extends AppCompatActivity {
     private Exam examInfo;
-    private static int VIDEO_REQUEST = 101;
+    private static final int VIDEO_REQUEST = 101;
     IAPIClient apiClient;
 
     @Override

@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class UploadBlobAsyncTask extends Thread{
-    private String filePath;
-    private String containerPathName;
+    private final String filePath;
+    private final String containerPathName;
 
     public UploadBlobAsyncTask(String filePath, String containerPathName){
         this.filePath = filePath;
