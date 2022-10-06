@@ -1,4 +1,4 @@
-package com.example.amisvp;
+package com.example.amisvp.interfaces;
 
 import com.example.amisvp.pojo.Auth;
 import com.example.amisvp.pojo.Exam;
