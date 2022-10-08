@@ -26,8 +26,9 @@ public class BlobHelper {
 
     private static final String storageConnectionString =
             "DefaultEndpointsProtocol=https;" +
-                    "AccountName=thesisprojectstoacc;" +
-                    "AccountKey=cHhwPJI1YFDwm4IW8VrYSlrS7/eBNAl0yjhCzJItjRbwOKaaTRE+3CGLbQ8trWUYVt2JmcmgtxVM+ASteqlIAw==;EndpointSuffix=core.windows.net";
+                    "AccountName=savprojectstoacc;" +
+                    "AccountKey=VC/jGYDv93NJSDD554P7+oSbb1Kf7sHIu/j0jqumBrPHyR4iUHvgaiwztZtlymM0HgglCfKHbXnz+AStupB3yA==;" +
+                    "EndpointSuffix=core.windows.net";
 
     public static CloudBlockBlob UploadAsync(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
 
