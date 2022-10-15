@@ -20,11 +20,14 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Size;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.amisvp.dialog.StopVideoDialog;
@@ -42,6 +45,8 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
     private VideoCapture videoCapture;
     Button btnRecordVideo, btnCancelVideo;
+    ProgressBar progressBarOrientation;
+    ImageView imageViewOrientation;
     private boolean saveVideoByDefault = true;
 
     PreviewView previewView;
@@ -58,8 +63,23 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
         previewView = findViewById(R.id.previewView);
         btnRecordVideo = findViewById(R.id.record_video_button);
         btnCancelVideo = findViewById(R.id.cancel_button);
+        progressBarOrientation = findViewById(R.id.orientationProgBar);
+        imageViewOrientation = findViewById(R.id.orientation_done_imageView);
 
+        imageViewOrientation.setVisibility(View.INVISIBLE);
         btnCancelVideo.setEnabled(false);
+        btnRecordVideo.setEnabled(false);
+
+        int orientation = this.getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            btnCancelVideo.setVisibility(View.INVISIBLE);
+            btnRecordVideo.setVisibility(View.INVISIBLE);
+            // code for portrait mode
+        } else {
+            // code for landscape mode
+            btnCancelVideo.setVisibility(View.VISIBLE);
+            btnRecordVideo.setVisibility(View.VISIBLE);
+        }
 
         setUpCamera();
     }
@@ -206,4 +226,27 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
     @Override
     public void onBackPressed () { }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        int newOrientation = newConfig.orientation;
+
+        if (newOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            // Do certain things when the user has switched to landscape.
+            btnRecordVideo.setEnabled(true);
+            progressBarOrientation.setVisibility(View.INVISIBLE);
+            imageViewOrientation.setVisibility(View.VISIBLE);
+            btnCancelVideo.setVisibility(View.VISIBLE);
+            btnRecordVideo.setVisibility(View.VISIBLE);
+
+        } else {
+            btnRecordVideo.setEnabled(false);
+            progressBarOrientation.setVisibility(View.VISIBLE);
+            imageViewOrientation.setVisibility(View.INVISIBLE);
+            btnCancelVideo.setVisibility(View.INVISIBLE);
+            btnRecordVideo.setVisibility(View.INVISIBLE);
+        }
+    }
 }

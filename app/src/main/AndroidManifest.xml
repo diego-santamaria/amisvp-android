@@ -25,7 +25,7 @@
         <activity
             android:name=".VideoCaptureActivity"
             android:exported="false"
-            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.AMISVP.Fullscreen" />
         <activity
             android:name=".CandidateActivity"
@@ -39,7 +39,6 @@
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

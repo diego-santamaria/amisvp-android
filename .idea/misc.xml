@@ -4,10 +4,11 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout-land/activity_candidate.xml" value="0.22996515679442509" />
+        <entry key="app/src/main/res/layout-land/activity_video_capture.xml" value="0.22395833333333334" />
         <entry key="app/src/main/res/layout/activity_candidate.xml" value="0.2214765100671141" />
         <entry key="app/src/main/res/layout/activity_fullscreen.xml" value="0.1722488038277512" />
         <entry key="app/src/main/res/layout/activity_result.xml" value="0.33" />
-        <entry key="app/src/main/res/layout/activity_video_capture.xml" value="0.15881805419921874" />
+        <entry key="app/src/main/res/layout/activity_video_capture.xml" value="0.24546051025390625" />
         <entry key="app/src/main/res/layout/activity_videocapture.xml" value="0.19746376811594202" />
       </map>
     </option>
@@ -21,7 +22,7 @@
   <component name="VisualizationToolProject">
     <option name="state">
       <ProjectState>
-        <option name="scale" value="0.27101898193359375" />
+        <option name="scale" value="0.24546051025390625" />
       </ProjectState>
     </option>
   </component>
