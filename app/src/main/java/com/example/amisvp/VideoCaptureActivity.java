@@ -6,23 +6,30 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.Preview;
 import androidx.camera.core.VideoCapture;
 import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory;
+import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback;
 import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.util.Size;
 import android.view.View;
 import android.widget.Button;
@@ -35,15 +42,26 @@ import com.example.amisvp.pojo.Exam;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 import java.util.concurrent.Executor;
 
-public class VideoCaptureActivity extends AppCompatActivity implements StopVideoDialog.NoticeDialogListener{
+public class VideoCaptureActivity extends AppCompatActivity
+        implements StopVideoDialog.NoticeDialogListener,
+        OnRequestPermissionsResultCallback {
     private Exam examInfo;
 
-    private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private VideoCapture videoCapture;
+    @Nullable private ProcessCameraProvider cameraProvider;
+    @Nullable private Preview previewUseCase;
+    @Nullable private VideoCapture videoCaptureUseCase;
+    @Nullable private ImageAnalysis analysisUseCase;
+    //@Nullable private VisionImageProcessor imageProcessor;
+    private CameraSelector cameraSelector;
+    private ListenableFuture<ProcessCameraProvider> cameraProviderLiveData;
+    private static final String TAG = "CameraXLivePreview";
+    private static final int PERMISSION_REQUESTS = 1;
+
     Button btnRecordVideo, btnCancelVideo;
     ProgressBar progressBarOrientation;
     ImageView imageViewOrientation;
@@ -51,7 +69,6 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
     PreviewView previewView;
 
-    @SuppressLint("RestrictedApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +76,11 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
         Intent intent = getIntent();
         examInfo = (Exam)intent.getSerializableExtra(EXTRA_EXAM_INFO);
+
+        //Camera selector use case
+        cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .build();
 
         previewView = findViewById(R.id.previewView);
         btnRecordVideo = findViewById(R.id.record_video_button);
@@ -72,61 +94,97 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
 
         int orientation = this.getResources().getConfiguration().orientation;
         if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            // code for portrait mode
             btnCancelVideo.setVisibility(View.INVISIBLE);
             btnRecordVideo.setVisibility(View.INVISIBLE);
-            // code for portrait mode
         } else {
             // code for landscape mode
             btnCancelVideo.setVisibility(View.VISIBLE);
             btnRecordVideo.setVisibility(View.VISIBLE);
         }
 
-        setUpCamera();
-    }
+        new ViewModelProvider(this, (ViewModelProvider.Factory) AndroidViewModelFactory.getInstance(getApplication()))
+                .get(CameraXViewModel.class)
+                .getProcessCameraProvider()
+                .observe(
+                        this,
+                        provider -> {
+                            cameraProvider = provider;
+                            if (allPermissionsGranted()) {
+                                bindAllCameraUseCases();
+                            }
+                        });
 
-    private void setUpCamera(){
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-        cameraProviderFuture.addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                startCameraX(cameraProvider);
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }, getExecutor());
+        if (!allPermissionsGranted()) {
+            getRuntimePermissions();
+        }
     }
 
     private Executor getExecutor() {
         return ContextCompat.getMainExecutor(this);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        bindAllCameraUseCases();
+    }
+
+    private void bindAllCameraUseCases() {
+        bindPreviewUseCase();
+        bindVideoCaptureUseCase();
+        bindAnalysisUseCase();
+    }
+
+    private void bindPreviewUseCase() {
+        if (cameraProvider == null) {
+            return;
+        }
+        if (previewUseCase != null) {
+            cameraProvider.unbind(previewUseCase);
+        }
+
+        Preview.Builder builder = new Preview.Builder();
+        //Size targetResolution = new Size(720,480);
+        //builder.setTargetResolution(targetResolution);
+        previewUseCase = builder.build();
+        previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
+        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, previewUseCase);
+    }
+
     @SuppressLint("RestrictedApi")
-    private void startCameraX(ProcessCameraProvider cameraProvider) {
-        cameraProvider.unbindAll();
+    private void bindVideoCaptureUseCase() {
+        if (cameraProvider == null) {
+            return;
+        }
+        if (videoCaptureUseCase != null) {
+            cameraProvider.unbind(videoCaptureUseCase);
+        }
 
-        //Camera selector use case
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                .build();
+        VideoCapture.Builder builder = new VideoCapture.Builder();
+        Integer videoFrameRate = 15;
+        Size targetResolution = new Size(720,480);
+        builder.setVideoFrameRate(videoFrameRate);
+        builder.setTargetResolution(targetResolution);
+        videoCaptureUseCase = builder.build();
+        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, videoCaptureUseCase);
+    }
 
-        //Preview use case
-        Preview preview = new Preview.Builder().build();
-        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+    private void bindAnalysisUseCase() {
 
-        //Video capture use case
-        videoCapture = new VideoCapture.Builder()
-                .setVideoFrameRate(15)
-                .setTargetResolution(new Size(720,480))
-                .build();
+    }
 
-        cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, videoCapture);
+    private void showResultIntent(String vidFilePath){
+        Intent intent = new Intent(this, ResultActivity.class);
+        examInfo.RutaVideo = vidFilePath;
+        intent.putExtra(EXTRA_EXAM_INFO, examInfo);
+        startActivity(intent);
+        finish();
     }
 
     @SuppressLint("RestrictedApi")
     private void recordVideo() {
-        if (videoCapture != null) {
+        if (videoCaptureUseCase != null) {
             File movieDir = new File(Environment.getExternalStorageDirectory() + "/DCIM", "/AMAV recordings");
             if (!movieDir.exists())
                 movieDir.mkdir();
@@ -148,7 +206,7 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
                 // for ActivityCompat#requestPermissions for more details.
                 return;
             }
-            videoCapture.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
+            videoCaptureUseCase.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
                 @Override
                 public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
                     try {
@@ -170,14 +228,6 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
                 }
             });
         }
-    }
-
-    private void showResultIntent(String vidFilePath){
-        Intent intent = new Intent(this, ResultActivity.class);
-        examInfo.RutaVideo = vidFilePath;
-        intent.putExtra(EXTRA_EXAM_INFO, examInfo);
-        startActivity(intent);
-        finish();
     }
 
     @SuppressLint("RestrictedApi")
@@ -207,7 +257,6 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
         // User touched the dialog's negative button
-
     }
 
     @SuppressLint("RestrictedApi")
@@ -221,7 +270,7 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
     private void setDefaultState(){
         btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
         btnCancelVideo.setEnabled(false);
-        videoCapture.stopRecording();
+        videoCaptureUseCase.stopRecording();
     }
 
     @Override
@@ -248,5 +297,64 @@ public class VideoCaptureActivity extends AppCompatActivity implements StopVideo
             btnCancelVideo.setVisibility(View.INVISIBLE);
             btnRecordVideo.setVisibility(View.INVISIBLE);
         }
+    }
+
+    private boolean allPermissionsGranted() {
+        for (String permission : getRequiredPermissions()) {
+            if (!isPermissionGranted(this, permission)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void getRuntimePermissions() {
+        List<String> allNeededPermissions = new ArrayList<>();
+        for (String permission : getRequiredPermissions()) {
+            if (!isPermissionGranted(this, permission)) {
+                allNeededPermissions.add(permission);
+            }
+        }
+
+        if (!allNeededPermissions.isEmpty()) {
+            ActivityCompat.requestPermissions(
+                    this, allNeededPermissions.toArray(new String[0]), PERMISSION_REQUESTS);
+        }
+    }
+
+    private String[] getRequiredPermissions() {
+        try {
+            PackageInfo info =
+                    this.getPackageManager()
+                            .getPackageInfo(this.getPackageName(), PackageManager.GET_PERMISSIONS);
+            String[] ps = info.requestedPermissions;
+            if (ps != null && ps.length > 0) {
+                return ps;
+            } else {
+                return new String[0];
+            }
+        } catch (Exception e) {
+            return new String[0];
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, String[] permissions, int[] grantResults) {
+        Log.i(TAG, "Permission granted!");
+        if (allPermissionsGranted()) {
+            bindAllCameraUseCases();
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private static boolean isPermissionGranted(Context context, String permission) {
+        if (ContextCompat.checkSelfPermission(context, permission)
+                == PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "Permission granted: " + permission);
+            return true;
+        }
+        Log.i(TAG, "Permission NOT granted: " + permission);
+        return false;
     }
 }
