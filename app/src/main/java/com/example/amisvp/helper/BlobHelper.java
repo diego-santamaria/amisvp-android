@@ -1,28 +1,37 @@
 package com.example.amisvp.helper;
 
+import android.util.Log;
+
+import com.microsoft.azure.storage.AccessCondition;
 import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.OperationContext;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.blob.BlobContainerPermissions;
 import com.microsoft.azure.storage.blob.BlobContainerPublicAccessType;
+import com.microsoft.azure.storage.blob.BlobRequestOptions;
+import com.microsoft.azure.storage.blob.BlockEntry;
 import com.microsoft.azure.storage.blob.CloudBlobClient;
 import com.microsoft.azure.storage.blob.CloudBlobContainer;
 import com.microsoft.azure.storage.blob.CloudBlockBlob;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class BlobHelper {
 
     private static final String storageConnectionString =
             "DefaultEndpointsProtocol=https;" +
-                    "AccountName=thesisprojectstoacc;" +
-                    "AccountKey=cHhwPJI1YFDwm4IW8VrYSlrS7/eBNAl0yjhCzJItjRbwOKaaTRE+3CGLbQ8trWUYVt2JmcmgtxVM+ASteqlIAw==;EndpointSuffix=core.windows.net";
+                    "AccountName=savprojectstoacc;" +
+                    "AccountKey=VC/jGYDv93NJSDD554P7+oSbb1Kf7sHIu/j0jqumBrPHyR4iUHvgaiwztZtlymM0HgglCfKHbXnz+AStupB3yA==;" +
+                    "EndpointSuffix=core.windows.net";
 
-    private void uploadBlobToContainer(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
+    public static CloudBlockBlob UploadAsync(String filePath, String fileName, String containerPathName) throws URISyntaxException, InvalidKeyException, StorageException, IOException {
+
         // Setup the cloud storage account.
         CloudStorageAccount account = CloudStorageAccount.parse(storageConnectionString);
 
@@ -55,27 +64,16 @@ public class BlobHelper {
         CloudBlockBlob blob = container
                 .getBlockBlobReference(fileName != null ? fileName : "defaultNameForBlob");
 
+        BlobRequestOptions blobRequestOptions = new BlobRequestOptions();
+        blobRequestOptions.setConcurrentRequestCount(8);
+        blobRequestOptions.setSingleBlobPutThresholdInBytes(65000000); // 62 MB
+
+        AccessCondition accessCondition = new AccessCondition();
+        OperationContext operationContext = new OperationContext();
+
         // Upload video to the blob
-        blob.uploadFromFile(filePath);
-
-        //blob.getUri();
+        blob.uploadFromFile(filePath, accessCondition, blobRequestOptions, operationContext);
+        Log.d("getRequestResults: ",operationContext.getRequestResults()+"");
+        return blob;
     }
-
-    public void uploadBlobToContainerTask(String filePath, String containerPathName){
-        new Thread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Path p = Paths.get(filePath);
-                            String fileName = p.getFileName().toString();
-                            uploadBlobToContainer(filePath, fileName, containerPathName);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        ).start();
-    }
-
 }

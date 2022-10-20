@@ -12,9 +12,9 @@ import java.io.InputStream;
 
 public class ImageHelper {
 
-    public static class DownloadImageFromInternet extends AsyncTask<String, Void, Bitmap> {
+    public static class SetImageFromInternet extends AsyncTask<String, Void, Bitmap> {
         ImageView imageView;
-        public DownloadImageFromInternet(ImageView imageView) {
+        public SetImageFromInternet(ImageView imageView) {
             this.imageView=imageView;
             //Toast.makeText(applicationContext, "Please wait, it may take a few minute...",Toast.LENGTH_SHORT).show();
         }

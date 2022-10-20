@@ -8,7 +8,6 @@
     android:theme="@style/ThemeOverlay.AMISVP.FullscreenContainer"
     android:keepScreenOn="true"
     tools:context=".FullscreenActivity">
-
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
@@ -82,5 +81,12 @@
         </RelativeLayout>
 
     </FrameLayout>
+
+    <ProgressBar
+        android:id="@+id/indeterminateBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:indeterminate="true" />
 
 </FrameLayout>

@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.amisvp.databinding.ActivityFullscreenBinding;
+import com.example.amisvp.interfaces.IAPIClient;
 import com.example.amisvp.pojo.Auth;
 import com.example.amisvp.pojo.Exam;
 
@@ -131,6 +133,8 @@ public class FullscreenActivity extends AppCompatActivity {
         binding = ActivityFullscreenBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        findViewById(R.id.indeterminateBar).setVisibility(View.GONE);
+
         mVisible = true;
         mControlsView = binding.fullscreenContentControls;
         mContentView = binding.fullscreenContent;
@@ -235,7 +239,21 @@ public class FullscreenActivity extends AppCompatActivity {
         String tokenStr = tokenEditText.getText().toString();
 
         apiClient = ServiceGenerator.createService(IAPIClient.class, ServiceGenerator.authToken);
+
         getExamInfoByToken(tokenStr);
+    }
+
+    private void initiateLoading(boolean loading){
+        Dialog mOverlayDialog;
+        if (loading){
+            findViewById(R.id.indeterminateBar).setVisibility(View.VISIBLE);
+            findViewById(R.id.main_button).setClickable(false);
+            Toast.makeText(FullscreenActivity.this,"Obteniendo información. Por favor, espere.", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            findViewById(R.id.indeterminateBar).setVisibility(View.GONE);
+            findViewById(R.id.main_button).setClickable(true);
+        }
     }
 
     private void showCandidateInfoIntent(Exam examInfo){
@@ -245,6 +263,7 @@ public class FullscreenActivity extends AppCompatActivity {
     }
 
     private void getExamInfoByToken(String tokenStr){
+        initiateLoading(true);
         Call<Exam> call = apiClient.getByToken(tokenStr);
         call.enqueue(new Callback<Exam>() {
             @Override
@@ -254,14 +273,16 @@ public class FullscreenActivity extends AppCompatActivity {
                     Exam examInfo = response.body();
                     showCandidateInfoIntent(examInfo);
                 } else {
-                    Toast.makeText(getApplicationContext(),"Invalid token.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Token inválido.",Toast.LENGTH_SHORT).show();
                 }
+                initiateLoading(false);
             }
 
             @Override
             public void onFailure(Call<Exam> call, Throwable t) {
                 Log.d("Error",t.getMessage()+"");
                 call.cancel();
+                initiateLoading(false);
             }
         });
     }
@@ -275,9 +296,9 @@ public class FullscreenActivity extends AppCompatActivity {
             public void onResponse(Call<String> call, Response<String> response) {
                 if (response.isSuccessful()) {
                     ServiceGenerator.authToken = response.body();
-                    Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"En línea",Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getApplicationContext(),"Not connected",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),"Sin conexión",Toast.LENGTH_SHORT).show();
                 }
             }
 

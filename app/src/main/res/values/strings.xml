@@ -5,4 +5,9 @@
     <string name="token_textbox_hint">Ingrese el token</string>
     <string name="candidate_main_button">Comenzar</string>
     <string name="btn_record_video">Iniciar evaluación</string>
+    <string name="dialog_stop_recording">¿Está seguro que desea finalizar la evaluación?</string>
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="txt_status1">Guardando video...</string>
+    <string name="txt_status_orientation">Orientación horizontal</string>
 </resources>
