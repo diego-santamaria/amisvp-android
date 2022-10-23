@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.amisvp.databinding.ActivityFullscreenBinding;
+import com.example.amisvp.helper.AuthenticationHelper;
 import com.example.amisvp.interfaces.IAPIClient;
 import com.example.amisvp.pojo.Auth;
 import com.example.amisvp.pojo.Exam;
@@ -164,8 +165,7 @@ public class FullscreenActivity extends AppCompatActivity {
             }
         });
 
-        Authenticate();
-
+        AuthenticationHelper.Authenticate(getApplicationContext());
     }
 
     @Override
@@ -273,7 +273,14 @@ public class FullscreenActivity extends AppCompatActivity {
                     Exam examInfo = response.body();
                     showCandidateInfoIntent(examInfo);
                 } else {
-                    Toast.makeText(getApplicationContext(),"Token inválido.",Toast.LENGTH_SHORT).show();
+                    if (response.code() == 401) // Unauthorized
+                    {
+                        AuthenticationHelper.Authenticate(getApplicationContext());
+                        Toast.makeText(getApplicationContext(),"Sin conexión. Por favor, reintente.",Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(),"Token inválido.",Toast.LENGTH_SHORT).show();
+                    }
                 }
                 initiateLoading(false);
             }
@@ -282,38 +289,10 @@ public class FullscreenActivity extends AppCompatActivity {
             public void onFailure(Call<Exam> call, Throwable t) {
                 Log.d("Error",t.getMessage()+"");
                 call.cancel();
+                Toast.makeText(getApplicationContext(),"Sin conexión.",Toast.LENGTH_SHORT).show();
                 initiateLoading(false);
             }
         });
     }
 
-    private void Authenticate() {
-        Auth auth = getAuth();
-        apiClient = ServiceGenerator.createService(IAPIClient.class);
-        Call<String> call = apiClient.loginService(auth);
-        call.enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                if (response.isSuccessful()) {
-                    ServiceGenerator.authToken = response.body();
-                    Toast.makeText(getApplicationContext(),"En línea",Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(),"Sin conexión",Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Log.d("Error", t.getMessage());
-                call.cancel();
-            }
-        });
-    }
-
-    private Auth getAuth() {
-        Auth auth = new Auth();
-        auth.Username = "admin";
-        auth.Password = "12345";
-        return auth;
-    }
 }

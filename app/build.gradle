@@ -36,9 +36,11 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.guava:guava:27.1-android'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'com.squareup.okhttp3:logging-interceptor:3.4.1'
+    implementation 'com.google.mlkit:face-mesh-detection:16.0.0-beta1'
 
     def cameraxVersion = "1.2.0-beta01"
     implementation "androidx.camera:camera-core:${cameraxVersion}"
@@ -58,5 +60,6 @@ dependencies {
     implementation "androidx.fragment:fragment:1.5.2"
 
     implementation 'com.microsoft.azure.android:azure-storage-android:2.0.0@aar'
+    implementation 'com.google.mlkit:face-detection:16.1.5'
 }
 

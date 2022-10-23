@@ -4,6 +4,8 @@ import static com.example.amisvp.FullscreenActivity.EXTRA_EXAM_INFO;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -27,8 +29,13 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.hardware.Camera;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.ListPreference;
+import android.preference.PreferenceCategory;
+import android.text.Layout;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -37,18 +44,27 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.example.amisvp.dialog.CancelVideoDialog;
 import com.example.amisvp.dialog.StopVideoDialog;
+import com.example.amisvp.interfaces.IVisionImageProcessor;
+import com.example.amisvp.java.facedetector.FaceDetectorProcessor;
 import com.example.amisvp.pojo.Exam;
+import com.example.amisvp.preference.PreferenceUtils;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.mlkit.common.MlKitException;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class VideoCaptureActivity extends AppCompatActivity
         implements StopVideoDialog.NoticeDialogListener,
+        CancelVideoDialog.NoticeDialogListener,
         OnRequestPermissionsResultCallback {
     private Exam examInfo;
 
@@ -56,18 +72,23 @@ public class VideoCaptureActivity extends AppCompatActivity
     @Nullable private Preview previewUseCase;
     @Nullable private VideoCapture videoCaptureUseCase;
     @Nullable private ImageAnalysis analysisUseCase;
-    //@Nullable private VisionImageProcessor imageProcessor;
+    @Nullable private IVisionImageProcessor imageProcessor;
+
     private CameraSelector cameraSelector;
     private ListenableFuture<ProcessCameraProvider> cameraProviderLiveData;
     private static final String TAG = "CameraXLivePreview";
     private static final int PERMISSION_REQUESTS = 1;
+    //private final Size targetResolution = new Size(720,480);
 
-    Button btnRecordVideo, btnCancelVideo;
-    ProgressBar progressBarOrientation;
-    ImageView imageViewOrientation;
+    private Button btnRecordVideo, btnCancelVideo;
+    private ProgressBar progressBarOrientation;
+    private ImageView imageViewOrientation;
     private boolean saveVideoByDefault = true;
+    private boolean needUpdateGraphicOverlayImageSourceInfo;
+    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
 
-    PreviewView previewView;
+    private PreviewView previewView;
+    private GraphicOverlay graphicOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,29 +100,18 @@ public class VideoCaptureActivity extends AppCompatActivity
 
         //Camera selector use case
         cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .requireLensFacing(lensFacing)
                 .build();
-
         previewView = findViewById(R.id.previewView);
+        graphicOverlay = findViewById(R.id.graphic_overlay);
         btnRecordVideo = findViewById(R.id.record_video_button);
         btnCancelVideo = findViewById(R.id.cancel_button);
         progressBarOrientation = findViewById(R.id.orientationProgBar);
         imageViewOrientation = findViewById(R.id.orientation_done_imageView);
 
-        imageViewOrientation.setVisibility(View.INVISIBLE);
-        btnCancelVideo.setEnabled(false);
-        btnRecordVideo.setEnabled(false);
 
         int orientation = this.getResources().getConfiguration().orientation;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            // code for portrait mode
-            btnCancelVideo.setVisibility(View.INVISIBLE);
-            btnRecordVideo.setVisibility(View.INVISIBLE);
-        } else {
-            // code for landscape mode
-            btnCancelVideo.setVisibility(View.VISIBLE);
-            btnRecordVideo.setVisibility(View.VISIBLE);
-        }
+        toggleByFulfillmentOfPreconditions(orientation);
 
         new ViewModelProvider(this, (ViewModelProvider.Factory) AndroidViewModelFactory.getInstance(getApplication()))
                 .get(CameraXViewModel.class)
@@ -130,10 +140,55 @@ public class VideoCaptureActivity extends AppCompatActivity
         bindAllCameraUseCases();
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+    }
+
     private void bindAllCameraUseCases() {
-        bindPreviewUseCase();
+        if (cameraProvider != null) {
+            // As required by CameraX API, unbinds all use cases before trying to re-bind any of them.
+            cameraProvider.unbindAll();
+            bindPreviewUseCase();
+            if (videoCaptureUseCase == null) { // If no video is being recorded...
+                bindAnalysisUseCase();
+            } else {
+                switchBetweenTwoUseCases();
+            }
+        }
+    }
+
+    private void unbindAnalysisUseCase(){
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+        if (analysisUseCase != null) {
+            cameraProvider.unbind(analysisUseCase);
+        }
+        graphicOverlay.clear();
+    }
+
+    private void unbindPreviewUseCase(){
+        if (previewUseCase != null) {
+            cameraProvider.unbind(previewUseCase);
+        }
+    }
+
+    private void switchBetweenTwoUseCases(){
+        unbindAnalysisUseCase();
+        //unbindPreviewUseCase();
         bindVideoCaptureUseCase();
-        bindAnalysisUseCase();
     }
 
     private void bindPreviewUseCase() {
@@ -145,8 +200,10 @@ public class VideoCaptureActivity extends AppCompatActivity
         }
 
         Preview.Builder builder = new Preview.Builder();
-        //Size targetResolution = new Size(720,480);
-        //builder.setTargetResolution(targetResolution);
+        Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing);
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution);
+        }
         previewUseCase = builder.build();
         previewUseCase.setSurfaceProvider(previewView.getSurfaceProvider());
         cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, previewUseCase);
@@ -163,15 +220,73 @@ public class VideoCaptureActivity extends AppCompatActivity
 
         VideoCapture.Builder builder = new VideoCapture.Builder();
         Integer videoFrameRate = 15;
-        Size targetResolution = new Size(720,480);
+        Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing);
         builder.setVideoFrameRate(videoFrameRate);
-        builder.setTargetResolution(targetResolution);
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution);
+        }
         videoCaptureUseCase = builder.build();
         cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, videoCaptureUseCase);
     }
 
     private void bindAnalysisUseCase() {
+        if (cameraProvider == null) {
+            return;
+        }
+        if (analysisUseCase != null) {
+            cameraProvider.unbind(analysisUseCase);
+        }
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
+        try {
+            Log.i(TAG, "Using Face Detector Processor");
+            imageProcessor = new FaceDetectorProcessor(this);
+        } catch (Exception e) {
+            Log.e(TAG, "Can not create image processor for Face Detection", e);
+            Toast.makeText(
+                            getApplicationContext(),
+                            "Can not create image processor: " + e.getLocalizedMessage(),
+                            Toast.LENGTH_LONG)
+                    .show();
+            return;
+        }
 
+        ImageAnalysis.Builder builder = new ImageAnalysis.Builder();
+        Size targetResolution = PreferenceUtils.getCameraXTargetResolution(this, lensFacing);
+        if (targetResolution != null) {
+            builder.setTargetResolution(targetResolution);
+        }
+        analysisUseCase = builder.build();
+
+        needUpdateGraphicOverlayImageSourceInfo = true;
+        analysisUseCase.setAnalyzer(
+                // imageProcessor.processImageProxy will use another thread to run the detection underneath,
+                // thus we can just runs the analyzer itself on main thread.
+                ContextCompat.getMainExecutor(this),
+                imageProxy -> {
+                    if (needUpdateGraphicOverlayImageSourceInfo) {
+                        boolean isImageFlipped = false; //lensFacing == CameraSelector.LENS_FACING_FRONT;
+                        int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+                        if (rotationDegrees == 0 || rotationDegrees == 180) {
+                            graphicOverlay.setImageSourceInfo(
+                                    imageProxy.getWidth(), imageProxy.getHeight(), isImageFlipped);
+                        } else {
+                            graphicOverlay.setImageSourceInfo(
+                                    imageProxy.getHeight(), imageProxy.getWidth(), isImageFlipped);
+                        }
+                        needUpdateGraphicOverlayImageSourceInfo = false;
+                    }
+                    try {
+                        imageProcessor.processImageProxy(imageProxy, graphicOverlay);
+                    } catch (MlKitException e) {
+                        Log.e(TAG, "Failed to process image. Error: " + e.getLocalizedMessage());
+                        Toast.makeText(getApplicationContext(), e.getLocalizedMessage(), Toast.LENGTH_SHORT)
+                                .show();
+                    }
+                });
+
+        cameraProvider.bindToLifecycle(/* lifecycleOwner= */ this, cameraSelector, analysisUseCase);
     }
 
     private void showResultIntent(String vidFilePath){
@@ -233,6 +348,7 @@ public class VideoCaptureActivity extends AppCompatActivity
     @SuppressLint("RestrictedApi")
     public void onClick(View view) {
         saveVideoByDefault = true;
+        switchBetweenTwoUseCases();
         if(btnRecordVideo.getText() == getResources().getString(R.string.btn_record_video)){
             btnRecordVideo.setText("Finalizar evaluación");
             btnCancelVideo.setEnabled(true);
@@ -251,7 +367,17 @@ public class VideoCaptureActivity extends AppCompatActivity
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
         // User touched the dialog's positive button
-        setDefaultState();
+        if (dialog.getClass() == CancelVideoDialog.class)
+        {
+            Toast.makeText(this,"Evaluación cancelada.", Toast.LENGTH_SHORT).show();
+            saveVideoByDefault = false;
+            setDefaultState();
+            startActivity(new Intent(this, FullscreenActivity.class));
+            finish();
+        }
+        if (dialog.getClass() == StopVideoDialog.class)
+            setDefaultState();
+        // User touched the dialog's positive button
     }
 
     @Override
@@ -261,16 +387,18 @@ public class VideoCaptureActivity extends AppCompatActivity
 
     @SuppressLint("RestrictedApi")
     public void cancelVideo_onClick(View view){
-        //Toast.makeText(this,"Cancelado.", Toast.LENGTH_SHORT).show;
-        saveVideoByDefault = false;
-        setDefaultState();
+        //prompt
+        FragmentManager sfm = ((AppCompatActivity)this).getSupportFragmentManager();
+        DialogFragment dialog = new CancelVideoDialog();
+        dialog.show(sfm,null);
     }
 
     @SuppressLint("RestrictedApi")
     private void setDefaultState(){
         btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
-        btnCancelVideo.setEnabled(false);
-        videoCaptureUseCase.stopRecording();
+        //btnCancelVideo.setEnabled(false);
+        if (videoCaptureUseCase != null)
+            videoCaptureUseCase.stopRecording();
     }
 
     @Override
@@ -280,23 +408,33 @@ public class VideoCaptureActivity extends AppCompatActivity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        int newOrientation = newConfig.orientation;
+        if (imageProcessor != null) {
+            imageProcessor.stop();
+        }
 
-        if (newOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+        toggleByFulfillmentOfPreconditions(newConfig.orientation);
+
+        bindAllCameraUseCases();
+    }
+
+    private void toggleByFulfillmentOfPreconditions(int orientation){
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
             // Do certain things when the user has switched to landscape.
             btnRecordVideo.setEnabled(true);
             progressBarOrientation.setVisibility(View.INVISIBLE);
             imageViewOrientation.setVisibility(View.VISIBLE);
-            btnCancelVideo.setVisibility(View.VISIBLE);
-            btnRecordVideo.setVisibility(View.VISIBLE);
 
         } else {
             btnRecordVideo.setEnabled(false);
             progressBarOrientation.setVisibility(View.VISIBLE);
             imageViewOrientation.setVisibility(View.INVISIBLE);
-            btnCancelVideo.setVisibility(View.INVISIBLE);
-            btnRecordVideo.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle bundle) {
+        super.onSaveInstanceState(bundle);
+        //bundle.putString(STATE_SELECTED_MODEL, selectedModel);
     }
 
     private boolean allPermissionsGranted() {
@@ -356,5 +494,10 @@ public class VideoCaptureActivity extends AppCompatActivity
         }
         Log.i(TAG, "Permission NOT granted: " + permission);
         return false;
+    }
+
+    static boolean isLandscapeMode(Context context) {
+        return context.getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE;
     }
 }

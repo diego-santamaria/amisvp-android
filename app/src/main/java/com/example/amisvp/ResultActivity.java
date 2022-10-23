@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.amisvp.helper.AuthenticationHelper;
 import com.example.amisvp.interfaces.IAPIClient;
 import com.example.amisvp.interfaces.IBlobEvents;
 import com.example.amisvp.pojo.Exam;
@@ -163,7 +164,14 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
                     //String result = response.body();
                     setResultStatusView("success", 2);
                 } else {
-                    Toast.makeText(getApplicationContext(),"Actualización fallida. Por favor, reintente.",Toast.LENGTH_SHORT).show();
+                    if (response.code() == 401) // Unauthorized
+                    {
+                        AuthenticationHelper.Authenticate(getApplicationContext());
+                        Toast.makeText(getApplicationContext(),"Sin conexión. Por favor, reintente.",Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        Toast.makeText(getApplicationContext(),"Actualización fallida. Por favor, reintente.",Toast.LENGTH_SHORT).show();
+                    }
                     setResultStatusView("failed", 2);
                 }
             }
@@ -171,6 +179,7 @@ public class ResultActivity extends AppCompatActivity implements IBlobEvents {
             @Override
             public void onFailure(Call<String> call, Throwable t) {
                 Log.d("Error",t.getMessage()+"");
+                Toast.makeText(getApplicationContext(),"Sin conexión.",Toast.LENGTH_SHORT).show();
                 call.cancel();
             }
         });
