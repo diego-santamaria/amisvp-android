@@ -88,7 +88,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:backgroundTint="@color/secondaryColor"
-                android:onClick="onClick"
+                android:onClick="recordVideo_onClick"
                 android:text="@string/btn_record_video"
                 />
         </LinearLayout>

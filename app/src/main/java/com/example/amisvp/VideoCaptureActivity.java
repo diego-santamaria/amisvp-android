@@ -26,9 +26,12 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
@@ -42,6 +45,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.amisvp.dialog.CancelVideoDialog;
@@ -55,6 +59,7 @@ import com.google.mlkit.common.MlKitException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -78,12 +83,14 @@ public class VideoCaptureActivity extends AppCompatActivity
     private ListenableFuture<ProcessCameraProvider> cameraProviderLiveData;
     private static final String TAG = "CameraXLivePreview";
     private static final int PERMISSION_REQUESTS = 1;
-    //private final Size targetResolution = new Size(720,480);
+    private static final int TEXT_COLOR = Color.WHITE;
+    private static final float TEXT_SIZE = 20.0f;
 
     private Button btnRecordVideo, btnCancelVideo;
     private ProgressBar progressBarOrientation;
     private ImageView imageViewOrientation;
-    private boolean saveVideoByDefault = true;
+    private TextView status1TextView;
+    private boolean saveVideoByDefault = false;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
     private int lensFacing = CameraSelector.LENS_FACING_FRONT;
 
@@ -108,7 +115,9 @@ public class VideoCaptureActivity extends AppCompatActivity
         btnCancelVideo = findViewById(R.id.cancel_button);
         progressBarOrientation = findViewById(R.id.orientationProgBar);
         imageViewOrientation = findViewById(R.id.orientation_done_imageView);
+        status1TextView = findViewById(R.id.status1TextView);
 
+        setTextViewStyle(status1TextView);
 
         int orientation = this.getResources().getConfiguration().orientation;
         toggleByFulfillmentOfPreconditions(orientation);
@@ -176,7 +185,9 @@ public class VideoCaptureActivity extends AppCompatActivity
         if (analysisUseCase != null) {
             cameraProvider.unbind(analysisUseCase);
         }
-        graphicOverlay.clear();
+        if (graphicOverlay != null) {
+            graphicOverlay.clear();
+        }
     }
 
     private void unbindPreviewUseCase(){
@@ -324,16 +335,16 @@ public class VideoCaptureActivity extends AppCompatActivity
             videoCaptureUseCase.startRecording(new VideoCapture.OutputFileOptions.Builder(vidFile).build(), getExecutor(), new VideoCapture.OnVideoSavedCallback() {
                 @Override
                 public void onVideoSaved(@NonNull VideoCapture.OutputFileResults outputFileResults) {
-                    try {
-                        if (saveVideoByDefault == true) {
+
+                    if (saveVideoByDefault == true) {
+                        try {
                             Toast.makeText(VideoCaptureActivity.this,"Guardando evaluación. Por favor, espere.", Toast.LENGTH_SHORT).show();
                             showResultIntent(vidFile.getPath());
+                        } catch (Exception e) {
+                            Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno.", Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
                         }
-                    } catch (Exception e) {
-                        Toast.makeText(VideoCaptureActivity.this,"Ha ocurrido un error interno.", Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
                     }
-                    //videoCapture = null;
                 }
 
                 @Override
@@ -346,14 +357,15 @@ public class VideoCaptureActivity extends AppCompatActivity
     }
 
     @SuppressLint("RestrictedApi")
-    public void onClick(View view) {
-        saveVideoByDefault = true;
-        switchBetweenTwoUseCases();
-        if(btnRecordVideo.getText() == getResources().getString(R.string.btn_record_video)){
+    public void recordVideo_onClick(View view) {
+        // Iniciar evaluación
+        if(btnRecordVideo.getText() == getResources().getString(R.string.btn_record_video))
+        {
+            switchBetweenTwoUseCases();
             btnRecordVideo.setText("Finalizar evaluación");
             btnCancelVideo.setEnabled(true);
             recordVideo();
-        } else {
+        } else { // Finalizar evaluación
             //prompt
             FragmentManager sfm = ((AppCompatActivity)this).getSupportFragmentManager();
             DialogFragment dialog = new StopVideoDialog();
@@ -376,8 +388,10 @@ public class VideoCaptureActivity extends AppCompatActivity
             finish();
         }
         if (dialog.getClass() == StopVideoDialog.class)
+        {
+            saveVideoByDefault = true;
             setDefaultState();
-        // User touched the dialog's positive button
+        }
     }
 
     @Override
@@ -395,7 +409,7 @@ public class VideoCaptureActivity extends AppCompatActivity
 
     @SuppressLint("RestrictedApi")
     private void setDefaultState(){
-        btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
+        //btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
         //btnCancelVideo.setEnabled(false);
         if (videoCaptureUseCase != null)
             videoCaptureUseCase.stopRecording();
@@ -499,5 +513,13 @@ public class VideoCaptureActivity extends AppCompatActivity
     static boolean isLandscapeMode(Context context) {
         return context.getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE;
+    }
+
+    private void setTextViewStyle(TextView textView){
+        if (textView != null){
+            textView.setTextColor(TEXT_COLOR);
+            textView.setTextSize(TEXT_SIZE);
+            textView.setShadowLayer(5.0f, 0f, 0f, Color.BLACK);
+        }
     }
 }

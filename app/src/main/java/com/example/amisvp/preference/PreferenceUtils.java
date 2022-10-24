@@ -6,6 +6,8 @@ import android.preference.PreferenceManager;
 
 import com.google.mlkit.vision.face.FaceDetectorOptions;
 import android.os.Build.VERSION_CODES;
+import android.util.Size;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
@@ -14,6 +16,8 @@ import com.google.common.base.Preconditions;
 import com.example.amisvp.R;
 
 public class PreferenceUtils {
+
+    private static final Size _defTargetResolution = new Size(720,480);
 
     public static FaceDetectorOptions getFaceDetectorOptions(Context context) {
         int landmarkMode =
@@ -97,7 +101,7 @@ public class PreferenceUtils {
                         : context.getString(R.string.pref_key_camerax_front_camera_target_resolution);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         try {
-            return android.util.Size.parseSize(sharedPreferences.getString(prefKey, null));
+            return android.util.Size.parseSize(sharedPreferences.getString(prefKey, _defTargetResolution.toString()));
         } catch (Exception e) {
             return null;
         }
