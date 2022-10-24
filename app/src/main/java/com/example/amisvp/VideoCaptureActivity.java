@@ -31,6 +31,7 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.util.Log;
 import android.util.Size;
@@ -361,6 +362,7 @@ public class VideoCaptureActivity extends AppCompatActivity
             switchBetweenTwoUseCases();
             btnRecordVideo.setText("Finalizar evaluación");
             btnCancelVideo.setEnabled(true);
+            splashScreenUseAsyncTask();
             recordVideo();
         } else { // Finalizar evaluación
             //prompt
@@ -548,4 +550,35 @@ public class VideoCaptureActivity extends AppCompatActivity
         String error = "Failed to process. Error: " + e.getLocalizedMessage();
         Toast.makeText(VideoCaptureActivity.this, error, Toast.LENGTH_SHORT).show();
     }
+
+    private void splashScreenUseAsyncTask()
+    {
+        // For more reference: https://stackoverflow.com/questions/51489399/splash-screen-android-count-down-timer-display
+        final TextView countDown_textView = (TextView) findViewById(R.id.countDown_TextView);
+        countDown_textView.setTextColor(TEXT_COLOR);
+        countDown_textView.setTextSize(150.0f);
+        countDown_textView.setShadowLayer(5.0f, 0f, 0f, Color.BLACK);
+
+        // Create a count down timer object.It will count down every 0.1 seconds and last for milliSeconds milliseconds..
+        final int time= 4000; //3600000*5;
+        CountDownTimer countDownTimer = new CountDownTimer(time, 1000) {
+            @Override
+            public void onTick(long l) {
+                long Seconds = l / 1000 % 60;
+                if (Seconds != 0)
+                    countDown_textView.setText(String.format("%2d", Seconds));
+                else{
+                    countDown_textView.setText("");
+                }
+            }
+
+            @Override
+            public void onFinish() {
+                countDown_textView.setVisibility(View.INVISIBLE);
+            }
+        };
+        // Start the count down timer.
+        countDownTimer.start();
+    }
+
 }
