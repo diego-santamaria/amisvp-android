@@ -5,7 +5,6 @@ import static com.example.amisvp.FullscreenActivity.EXTRA_EXAM_INFO;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.annotation.StringRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
@@ -26,19 +25,13 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.hardware.Camera;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.ListPreference;
-import android.preference.PreferenceCategory;
-import android.text.Layout;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -51,26 +44,26 @@ import android.widget.Toast;
 import com.example.amisvp.dialog.CancelVideoDialog;
 import com.example.amisvp.dialog.StopVideoDialog;
 import com.example.amisvp.interfaces.IVisionImageProcessor;
+import com.example.amisvp.java.VisionProcessorBase;
 import com.example.amisvp.java.facedetector.FaceDetectorProcessor;
 import com.example.amisvp.pojo.Exam;
 import com.example.amisvp.preference.PreferenceUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.common.MlKitException;
+import com.google.mlkit.vision.face.Face;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executor;
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class VideoCaptureActivity extends AppCompatActivity
         implements StopVideoDialog.NoticeDialogListener,
         CancelVideoDialog.NoticeDialogListener,
-        OnRequestPermissionsResultCallback {
+        OnRequestPermissionsResultCallback,
+        FaceDetectorProcessor.NoticeDetectorListener{
     private Exam examInfo;
 
     @Nullable private ProcessCameraProvider cameraProvider;
@@ -87,9 +80,9 @@ public class VideoCaptureActivity extends AppCompatActivity
     private static final float TEXT_SIZE = 20.0f;
 
     private Button btnRecordVideo, btnCancelVideo;
-    private ProgressBar progressBarOrientation;
-    private ImageView imageViewOrientation;
-    private TextView status1TextView;
+    private ProgressBar progressBarOrientation, progressBarDetection;
+    private ImageView imageViewOrientation, imageViewDetection;
+    private TextView status1TextView, status2TextView;
     private boolean saveVideoByDefault = false;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
     private int lensFacing = CameraSelector.LENS_FACING_FRONT;
@@ -116,11 +109,15 @@ public class VideoCaptureActivity extends AppCompatActivity
         progressBarOrientation = findViewById(R.id.orientationProgBar);
         imageViewOrientation = findViewById(R.id.orientation_done_imageView);
         status1TextView = findViewById(R.id.status1TextView);
+        progressBarDetection = findViewById(R.id.faceProgBar);
+        imageViewDetection = findViewById(R.id.face_done_imageView);
+        status2TextView = findViewById(R.id.status2TextView);
 
         setTextViewStyle(status1TextView);
+        setTextViewStyle(status2TextView);
 
         int orientation = this.getResources().getConfiguration().orientation;
-        toggleByFulfillmentOfPreconditions(orientation);
+        toggleByFulfillmentOfPreconditions(orientation, false);
 
         new ViewModelProvider(this, (ViewModelProvider.Factory) AndroidViewModelFactory.getInstance(getApplication()))
                 .get(CameraXViewModel.class)
@@ -383,14 +380,14 @@ public class VideoCaptureActivity extends AppCompatActivity
         {
             Toast.makeText(this,"Evaluación cancelada.", Toast.LENGTH_SHORT).show();
             saveVideoByDefault = false;
-            setDefaultState();
+            stopRecording();
             startActivity(new Intent(this, FullscreenActivity.class));
             finish();
         }
         if (dialog.getClass() == StopVideoDialog.class)
         {
             saveVideoByDefault = true;
-            setDefaultState();
+            stopRecording();
         }
     }
 
@@ -408,7 +405,7 @@ public class VideoCaptureActivity extends AppCompatActivity
     }
 
     @SuppressLint("RestrictedApi")
-    private void setDefaultState(){
+    private void stopRecording(){
         //btnRecordVideo.setText(getResources().getString(R.string.btn_record_video));
         //btnCancelVideo.setEnabled(false);
         if (videoCaptureUseCase != null)
@@ -426,22 +423,35 @@ public class VideoCaptureActivity extends AppCompatActivity
             imageProcessor.stop();
         }
 
-        toggleByFulfillmentOfPreconditions(newConfig.orientation);
+        toggleByFulfillmentOfPreconditions(newConfig.orientation, false);
 
         bindAllCameraUseCases();
     }
 
-    private void toggleByFulfillmentOfPreconditions(int orientation){
+    private void toggleByFulfillmentOfPreconditions(int orientation, boolean faceDetected){
+        if (orientation == Configuration.ORIENTATION_UNDEFINED)
+            orientation = isLandscapeMode(this) ? Configuration.ORIENTATION_LANDSCAPE : Configuration.ORIENTATION_UNDEFINED;
         if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // Do certain things when the user has switched to landscape.
-            btnRecordVideo.setEnabled(true);
             progressBarOrientation.setVisibility(View.INVISIBLE);
             imageViewOrientation.setVisibility(View.VISIBLE);
-
         } else {
-            btnRecordVideo.setEnabled(false);
             progressBarOrientation.setVisibility(View.VISIBLE);
             imageViewOrientation.setVisibility(View.INVISIBLE);
+        }
+
+        if (faceDetected){
+            progressBarDetection.setVisibility(View.INVISIBLE);
+            imageViewDetection.setVisibility(View.VISIBLE);
+
+        } else {
+            progressBarDetection.setVisibility(View.VISIBLE);
+            imageViewDetection.setVisibility(View.INVISIBLE);
+        }
+
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE && faceDetected){
+            btnRecordVideo.setEnabled(true);
+        } else {
+            btnRecordVideo.setEnabled(false);
         }
     }
 
@@ -521,5 +531,21 @@ public class VideoCaptureActivity extends AppCompatActivity
             textView.setTextSize(TEXT_SIZE);
             textView.setShadowLayer(5.0f, 0f, 0f, Color.BLACK);
         }
+    }
+
+    @Override
+    public void onSuccess(List<Face> faces) {
+        // A face has been successfully detected
+        if (faces.isEmpty())
+            toggleByFulfillmentOfPreconditions(0, false);
+        else
+            toggleByFulfillmentOfPreconditions(0, true);
+    }
+    @Override
+    public void onFailure(Exception e) {
+        // No face has been detected
+        toggleByFulfillmentOfPreconditions(0, false);
+        String error = "Failed to process. Error: " + e.getLocalizedMessage();
+        Toast.makeText(VideoCaptureActivity.this, error, Toast.LENGTH_SHORT).show();
     }
 }

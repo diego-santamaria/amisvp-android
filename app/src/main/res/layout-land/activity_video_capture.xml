@@ -39,8 +39,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:indeterminate="true"
-            android:layout_marginStart="36dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="95dp"
             app:layout_constraintStart_toStartOf="parent"
             android:textColor="@color/primaryTextColor"
             app:layout_constraintTop_toTopOf="parent" />
@@ -49,7 +49,7 @@
             android:id="@+id/status1TextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="108dp"
             android:text="@string/txt_status_orientation"
             android:textColor="@color/primaryTextColor"
             app:layout_constraintEnd_toEndOf="parent"
@@ -62,8 +62,42 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:srcCompat="@drawable/ic_baseline_done_48_green"
-            android:layout_marginStart="36dp"
-            android:layout_marginTop="15dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="95dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <ProgressBar
+            android:id="@+id/faceProgBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="155dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textColor="@color/primaryTextColor"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/status2TextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="168dp"
+            android:text="@string/txt_status_face_detection"
+            android:textColor="@color/primaryTextColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.019"
+            app:layout_constraintStart_toEndOf="@+id/faceProgBar"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/face_done_imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/ic_baseline_done_48_green"
+            android:layout_marginStart="6dp"
+            android:layout_marginTop="155dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

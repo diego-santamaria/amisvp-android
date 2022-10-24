@@ -11,6 +11,7 @@
     <string name="cancel">Cancelar</string>
     <string name="txt_status1">Guardando video...</string>
     <string name="txt_status_orientation">Orientación horizontal</string>
+    <string name="txt_status_face_detection">Detección del rotro</string>
 
     <!-- Strings for face detector landmark mode preference. -->
     <string name="pref_title_face_detector_landmark_mode" translatable="false">Landmark mode</string>

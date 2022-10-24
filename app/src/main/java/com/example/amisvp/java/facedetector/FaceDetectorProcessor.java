@@ -5,7 +5,9 @@ import android.content.Context;
 import android.graphics.PointF;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
 
+import com.example.amisvp.dialog.CancelVideoDialog;
 import com.example.amisvp.preference.PreferenceUtils;
 import com.google.android.gms.tasks.Task;
 import com.google.mlkit.vision.common.InputImage;
@@ -26,11 +28,28 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
     private final FaceDetector detector;
 
+    public interface NoticeDetectorListener {
+        void onSuccess(List<Face> faces);
+        void onFailure(Exception e);
+    }
+
+    // Use this instance of the interface to deliver action events
+    FaceDetectorProcessor.NoticeDetectorListener listener;
+
     public FaceDetectorProcessor(Context context) {
         super(context);
         FaceDetectorOptions faceDetectorOptions = PreferenceUtils.getFaceDetectorOptions(context);
         Log.v(MANUAL_TESTING_LOG, "Face detector options: " + faceDetectorOptions);
         detector = FaceDetection.getClient(faceDetectorOptions);
+        // Verify that the host activity implements the callback interface
+        try {
+            // Instantiate the DetectorListener so we can send events to the host
+            listener = (FaceDetectorProcessor.NoticeDetectorListener) context;
+        } catch (ClassCastException e) {
+            // The activity doesn't implement the interface, throw exception
+            throw new ClassCastException(e
+                    + " must implement DetectorListener");
+        }
     }
 
     @Override
@@ -46,10 +65,12 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
 
     @Override
     protected void onSuccess(@NonNull List<Face> faces, @NonNull GraphicOverlay graphicOverlay) {
+
         for (Face face : faces) {
             graphicOverlay.add(new FaceGraphic(graphicOverlay, face));
             //logExtrasForTesting(face);
         }
+       listener.onSuccess(faces);
     }
 
     private static void logExtrasForTesting(Face face) {
@@ -118,6 +139,7 @@ public class FaceDetectorProcessor extends VisionProcessorBase<List<Face>> {
     @Override
     protected void onFailure(@NonNull Exception e) {
         Log.e(TAG, "Face detection failed " + e);
+        listener.onFailure(e);
     }
 }
 
