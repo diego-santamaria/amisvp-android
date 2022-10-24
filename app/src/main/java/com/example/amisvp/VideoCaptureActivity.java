@@ -45,7 +45,6 @@ import android.widget.Toast;
 import com.example.amisvp.dialog.CancelVideoDialog;
 import com.example.amisvp.dialog.StopVideoDialog;
 import com.example.amisvp.interfaces.IVisionImageProcessor;
-import com.example.amisvp.java.VisionProcessorBase;
 import com.example.amisvp.java.facedetector.FaceDetectorProcessor;
 import com.example.amisvp.pojo.Exam;
 import com.example.amisvp.preference.PreferenceUtils;
@@ -86,7 +85,7 @@ public class VideoCaptureActivity extends AppCompatActivity
     private TextView status1TextView, status2TextView;
     private boolean saveVideoByDefault = false;
     private boolean needUpdateGraphicOverlayImageSourceInfo;
-    private int lensFacing = CameraSelector.LENS_FACING_FRONT;
+    private final int lensFacing = CameraSelector.LENS_FACING_FRONT;
 
     private PreviewView previewView;
     private GraphicOverlay graphicOverlay;
@@ -362,7 +361,7 @@ public class VideoCaptureActivity extends AppCompatActivity
             switchBetweenTwoUseCases();
             btnRecordVideo.setText("Finalizar evaluación");
             btnCancelVideo.setEnabled(true);
-            splashScreenUseAsyncTask();
+            splashCountDownAsyncTask();
             recordVideo();
         } else { // Finalizar evaluación
             //prompt
@@ -450,11 +449,7 @@ public class VideoCaptureActivity extends AppCompatActivity
             imageViewDetection.setVisibility(View.INVISIBLE);
         }
 
-        if (orientation == Configuration.ORIENTATION_LANDSCAPE && faceDetected){
-            btnRecordVideo.setEnabled(true);
-        } else {
-            btnRecordVideo.setEnabled(false);
-        }
+        btnRecordVideo.setEnabled(orientation == Configuration.ORIENTATION_LANDSCAPE && faceDetected);
     }
 
     @Override
@@ -538,10 +533,7 @@ public class VideoCaptureActivity extends AppCompatActivity
     @Override
     public void onSuccess(List<Face> faces) {
         // A face has been successfully detected
-        if (faces.isEmpty())
-            toggleByFulfillmentOfPreconditions(0, false);
-        else
-            toggleByFulfillmentOfPreconditions(0, true);
+        toggleByFulfillmentOfPreconditions(0, !faces.isEmpty());
     }
     @Override
     public void onFailure(Exception e) {
@@ -551,7 +543,7 @@ public class VideoCaptureActivity extends AppCompatActivity
         Toast.makeText(VideoCaptureActivity.this, error, Toast.LENGTH_SHORT).show();
     }
 
-    private void splashScreenUseAsyncTask()
+    private void splashCountDownAsyncTask()
     {
         // For more reference: https://stackoverflow.com/questions/51489399/splash-screen-android-count-down-timer-display
         final TextView countDown_textView = (TextView) findViewById(R.id.countDown_TextView);
@@ -571,7 +563,6 @@ public class VideoCaptureActivity extends AppCompatActivity
                     countDown_textView.setText("");
                 }
             }
-
             @Override
             public void onFinish() {
                 countDown_textView.setVisibility(View.INVISIBLE);
@@ -580,5 +571,4 @@ public class VideoCaptureActivity extends AppCompatActivity
         // Start the count down timer.
         countDownTimer.start();
     }
-
 }
