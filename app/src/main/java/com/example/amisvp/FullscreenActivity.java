@@ -26,6 +26,8 @@ import com.example.amisvp.interfaces.IAPIClient;
 import com.example.amisvp.pojo.Auth;
 import com.example.amisvp.pojo.Exam;
 
+import java.util.Objects;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -271,10 +273,14 @@ public class FullscreenActivity extends AppCompatActivity {
                 if (response.isSuccessful()){
                     Log.d("OK",response.code()+"");
                     Exam examInfo = response.body();
-                    showCandidateInfoIntent(examInfo);
-                } else {
+                    if (validateExamInfoObj(examInfo))
+                        showCandidateInfoIntent(examInfo);
+                }
+                else
+                {
                     if (response.code() == 401) // Unauthorized
                     {
+                        ServiceGenerator.authToken = null;
                         AuthenticationHelper.Authenticate(getApplicationContext());
                         Toast.makeText(getApplicationContext(),"Sin conexión. Por favor, reintente.",Toast.LENGTH_SHORT).show();
                     }
@@ -293,6 +299,19 @@ public class FullscreenActivity extends AppCompatActivity {
                 initiateLoading(false);
             }
         });
+    }
+
+    private boolean validateExamInfoObj(Exam examInfo){
+        Log.d("examInfo: ",examInfo.toString()+"");
+        if (examInfo.token.isEmpty()){
+            Toast.makeText(getApplicationContext(),"El token no existe.",Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (examInfo.Procesado == 1){
+            Toast.makeText(getApplicationContext(),"El token no está disponible.",Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 
 }

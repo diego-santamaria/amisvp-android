@@ -50,5 +50,8 @@ public class Exam implements Serializable {
     @SerializedName("RutaVideo")
     @Expose
     public String RutaVideo;
+    @SerializedName("Procesado")
+    @Expose
+    public Integer Procesado;
 }
 
